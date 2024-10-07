@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Jogos Estrela Bet{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <center>
+            <a href="{{ url_for('kirongames.index', campeonato='SpanishFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="league flag" width="60" />
+            </a>
+            <a href="{{ url_for('kirongames.index', campeonato='ItalianFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="league flag" width="60" />
+            </a>
+            <a href="{{ url_for('kirongames.index', campeonato='EnglishFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="league flag" width="60" />
+            </a>
+        </center>
+    </div>
+    {% if games|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for item in games[1].minuto[::-1] %}
+                        <th style="text-align: center">{{ item }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="row">
+                {% for item in games[::-1] %}
+                    <tr>
+                        <td>{{ item['hora'] }}</td>
+                        {% for index, minuto in enumerate(item['scoreboard'][::-1]) %}
+                            <!-- {% set index = loop.index0 %} -->
+                            {% if minuto != '' %}
+                                {% if item["sumagols"][::-1][index] > 2.5 %}
+                                    <td class="bg-success">
+                                        <center>{{ minuto.replace(' ','') }}</center>
+                                    </td>
+                                {% else %}
+                                    <td class="bg-danger">
+                                        <center>{{ minuto.replace(' ','') }}</center>
+                                    </td>
+                                {% endif %}
+                            {% else %}
+                                <td class="bg-warning"></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <h3><center>Não há jogos disponíveis</center></h3>
+    {% endif %}
+{% endblock %}

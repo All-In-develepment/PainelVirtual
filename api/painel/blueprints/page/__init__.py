@@ -1,0 +1,1 @@
+from painel.blueprints.page.views import page

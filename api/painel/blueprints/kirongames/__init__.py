@@ -1,0 +1,1 @@
+from painel.blueprints.kirongames.views import kirongames

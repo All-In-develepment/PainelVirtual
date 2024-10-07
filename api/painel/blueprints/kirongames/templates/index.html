@@ -1,0 +1,92 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Jogos Estrela Bet{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <center>
+            <a href="{{ url_for('kirongames.index', campeonato='SpanishFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="league flag" width="60" />
+            </a>
+            <a href="{{ url_for('kirongames.index', campeonato='ItalianFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="league flag" width="60" />
+            </a>
+            <a href="{{ url_for('kirongames.index', campeonato='EnglishFastLeagueFootballSingleMatch') }}">
+                <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="league flag" width="60" />
+            </a>
+        </center>
+    </div>
+    <form id="paramForm">
+        <label for="mercado">Mercado:</label>
+        <input type="text" id="mercado" name="mercado" value="over2_5">
+        <br>
+        <label for="periodo">Período (horas):</label>
+        <input type="number" id="periodo" name="periodo" value="24">
+        <br>
+        <label for="campeonato">Campeonato:</label>
+        <input type="text" id="campeonato" name="campeonato" value="1">
+        <br>
+        <button type="submit">Enviar</button>
+    </form>
+    {% if games != 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for minutos in games['Minutos'] %}
+                        <th style="text-align: center">{{ minutos['Numero'] }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="row">
+                {% for linha in games['Linhas'] %}
+                    <tr>
+                        <td>{{ linha['Hora'] }}</td>
+                        {% for coluna in linha['Colunas'] %}
+                            {% if 'SomaGols' in coluna %}
+                                {% if coluna['SomaGols'] > 2.5 %}
+                                    <td style="text-align: center" class="bg-success">  
+                                        {{ coluna['Resultado'] }}
+                                    </td>
+                                {% else %}
+                                    <td style="text-align: center" class="bg-danger">  
+                                        {{ coluna['Resultado'] }}
+                                    </td>
+                                {% endif %}
+                            {% else %}
+                                <td style="text-align: center" class="bg-warnig">  
+                                    {{ coluna['Resultado'] }}
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <h3><center>Não há jogos disponíveis</center></h3>
+    {% endif %}
+
+    <script>
+        document.getElementById('paramForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Captura os valores dos inputs
+            let mercado = document.getElementById('mercado').value;
+            let periodo = document.getElementById('periodo').value;
+            let campeonato = document.getElementById('campeonato').value;
+
+            // Cria a URL com os parâmetros
+            let url = `/index?mercado=${mercado}&periodo=${periodo}&campeonato=${campeonato}`;
+
+            // Faz a requisição GET para o servidor
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    // Aqui você pode manipular a resposta do servidor
+                    console.log(data);
+                })
+                .catch(error => console.error('Erro:', error));
+        });
+    </script>
+{% endblock %}

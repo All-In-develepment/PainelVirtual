@@ -1,0 +1,1 @@
+from painel.blueprints.admin.views import admin

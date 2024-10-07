@@ -1,0 +1,1 @@
+from painel.blueprints.user.views import user

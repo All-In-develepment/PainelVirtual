@@ -1,0 +1,1 @@
+from painel.blueprints.contact.views import contact

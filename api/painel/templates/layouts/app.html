@@ -23,8 +23,9 @@
           {% if current_user.is_authenticated and current_user.subscription %}
             <li><a href="{{ url_for('kirongames.index') }}">Horários</a></li>
           {% else %}
-            <li><a href="{{ url_for('billing.pricing') }}">Pricing</a></li>
+          <li><a href="{{ url_for('billing.pricing') }}">Pricing</a></li>
           {% endif %}
+          <li><a href="{{ url_for('kirongames.next_games') }}">Próximo Jogos</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if current_user.role == 'admin' %}

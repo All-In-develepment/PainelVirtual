@@ -149,7 +149,7 @@ def index():
                 if 'Resultado' in coluna:
                     soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
                     coluna['SomaGols'] = soma_gols
-                  # Calcule a soma dos gols para os outros mercados
+                    # Calcule a soma dos gols para os outros mercados
                     coluna['SomaGols1_5'] = soma_gols
                     coluna['SomaGols0_5'] = soma_gols
 
@@ -159,7 +159,7 @@ def index():
                     coluna['SomaGolsUnder2_5'] = soma_gols
                     coluna['SomaGolsUnder3_5'] = soma_gols
 
-                     # Calculos para Ambas Marcam
+                    # Calculos para Ambas Marcam
                     gols_time1 = int(coluna['Resultado'].split('-')[0])
                     gols_time2 = int(coluna['Resultado'].split('-')[1])
                     
@@ -167,7 +167,7 @@ def index():
                     coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
                     coluna['SomaGols'] = gols_time1 + gols_time2
 
-                     # Adicionando a lógica para Par ou Ímpar
+                    # Adicionando a lógica para Par ou Ímpar
                     if soma_gols % 2 == 0:
                         coluna['ParOuImpar'] = 'Par'
                     else:
@@ -212,6 +212,7 @@ def get_game_details(team_a, team_b):
     
     try:
         response = get_api_data(liga, periodo)
+        print("response\n", response)
 
         if response.status_code == 200:
             games_data = response.json()

@@ -139,6 +139,10 @@ def template_processors(app):
     app.jinja_env.filters['format_currency'] = format_currency
     app.jinja_env.globals.update(current_year=current_year)
 
+    # Configuração do Jinja para controlar o espaçamento
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
+    
     return app.jinja_env
 
 def extensions(app):

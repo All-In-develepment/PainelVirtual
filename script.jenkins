@@ -1,0 +1,14 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build and Run') {
+            steps {
+                script {
+                    // Faz o build e inicia os containers em segundo plano
+                    sh 'docker-compose up -d --build'
+                }
+            }
+        }
+    }
+}

@@ -15,20 +15,7 @@
 
 <div class="button-container">
   <center>
-    {% for team, games in games_by_team_future.items() %}
-      {% if loop.first %}
-        <!-- Guardar os valores do primeiro jogo para execução ao carregar a página -->
-        <script>
-          let firstTeamA = "{{ games[0].TeamA }}";
-          let firstTeamB = "{{ games[0].TeamB }}";
-          let firstHorario = "{{ games[0].Horario }}";
-        </script>
-      {% endif %}
-      <button class="btn btn-info" onclick="showGameDetails('{{ games[0].TeamA }}', '{{ games[0].TeamB }}', '{{ games[0].Horario }}')">
-        {{ games[0].TeamA }} vs {{ games[0].TeamB }} <br>
-        {{ games[0].Horario }}
-      </button>
-    {% endfor %}
+    <div id="games-buttons"></div>
   </center>
 </div>
 
@@ -55,17 +42,54 @@
 // Variável global para armazenar o leagueId
 let leagueId = 1;  // Valor padrão, por exemplo, para Itália
   
-function filterByLeague(selectedLeagueId) {
-  leagueId = selectedLeagueId;
-  // Limpar os dados anteriores
-  document.getElementById('team-a-details').innerHTML = '';
-  document.getElementById('team-b-details').innerHTML = '';
-  document.getElementById('team-a-home-details').innerHTML = '';
-  document.getElementById('team-b-home-details').innerHTML = '';
+// Função para carregar os jogos dinamicamente via AJAX
+  function loadGamesByLeague(leagueId) {
+    fetch(`/kirongames/get-games?campeonato=${leagueId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+          return;
+        }
 
-  // Redirecionar ou fazer nova requisição para carregar a nova liga
-  window.location.href = `/kirongames/next-games?campeonato=${leagueId}`;
-}
+        // Atualiza o conteúdo dos botões dinamicamente
+        let buttonsHtml = '';
+        Object.keys(data).forEach(team => {
+          let games = data[team];
+          let firstGame = games[0];
+
+          buttonsHtml += `
+            <button class="btn btn-info" onclick="showGameDetails('${firstGame.TeamA}', '${firstGame.TeamB}', '${firstGame.Horario}')">
+              ${firstGame.TeamA} vs ${firstGame.TeamB} <br>
+              ${firstGame.Horario}
+            </button>
+          `;
+        });
+
+        document.getElementById('games-buttons').innerHTML = buttonsHtml;
+
+        // Chamar showGameDetails para o primeiro jogo
+        if (Object.keys(data).length > 0) {
+          let firstTeam = Object.keys(data)[0];
+          let firstGame = data[firstTeam][0];
+          showGameDetails(firstGame.TeamA, firstGame.TeamB, firstGame.Horario);
+        }
+      })
+      .catch(error => console.error('Erro ao carregar os jogos:', error));
+  }
+
+  // Carregar os jogos ao carregar a página ou mudar a liga
+  window.onload = function() {
+    loadGamesByLeague(1);  // Carregar a liga padrão ao carregar a página
+  };
+
+  // Atualiza os jogos ao mudar de liga
+  function filterByLeague(selectedLeagueId) {
+    loadGamesByLeague(selectedLeagueId);
+    // Atualizar a URL sem recarregar a página
+    const newUrl = `/kirongames/next-games?campeonato=${selectedLeagueId}`;
+    history.pushState(null, '', newUrl);
+  }
 
 function showGameDetails(teamA, teamB, horario) {
   const currentUrl = window.location.href;

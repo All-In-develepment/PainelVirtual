@@ -182,7 +182,7 @@ def index():
 def next_games():
     periodo = request.args.get('periodo', 48)
     liga = request.args.get('campeonato', '1')
-
+    
     try:
         response = get_api_data(liga, periodo)
 
@@ -239,3 +239,28 @@ def get_game_details(team_a, team_b):
     except requests.exceptions.RequestException as e:
         flash(f'Ocorreu um erro ao se conectar à API: {str(e)}', 'danger')
         return render_template('next_games.html', games_by_team={})
+    
+    
+@kirongames.route('/get-games', methods=['GET'])
+def get_games():
+    periodo = request.args.get('periodo', 48)
+    liga = request.args.get('campeonato', '1')
+    
+    try:
+        response = get_api_data(liga, periodo)
+
+        if response.status_code == 200:
+            games_data = response.json()
+
+            if not games_data.get('Linhas'):
+                return jsonify({'message': 'Nenhum jogo encontrado.'}), 200
+
+            _, games_by_team_future, _ = organize_games_by_team(games_data)
+
+            return jsonify(games_by_team_future), 200
+
+        else:
+            return jsonify({'message': f'Erro ao buscar os dados: {response.status_code}'}), response.status_code
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'message': f'Ocorreu um erro ao se conectar à API: {str(e)}'}), 500

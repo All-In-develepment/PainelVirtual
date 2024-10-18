@@ -128,11 +128,76 @@ def organize_games_by_team(games_data):
 
     return games_by_team, games_by_team_future, all_games_by_team
 
+def organize_games_details_by_teams(games_data, teamA, teamB):
+    """
+    Organiza os jogos entre teamA e teamB, separando entre jogos onde teamA é mandante 
+    e todos os jogos entre os dois times, independentemente do mandante.
+    """
+
+    # Dicionários para armazenar os jogos
+    games_teamA_home = defaultdict(list)  # Jogos com teamA como mandante contra teamB
+    all_head_to_head_games = defaultdict(list)  # Todos os jogos entre teamA e teamB
+
+    # Percorre todos os jogos fornecidos
+    for game in games_data:
+        # Extrai informações relevantes do jogo
+        time_home = game.get('team_home')
+        time_visitor = game.get('team_visitor')
+        placar_str = game.get('scoreboard')
+        match_datetime_str = game.get('match_datetime')
+        hour = game.get('hora')
+        minute = game.get('minuto')
+        
+        # Converte a string datetime em objeto datetime
+        try:
+            match_datetime = datetime.strptime(match_datetime_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            # Se a data/hora for inválida, ignore o jogo
+            continue
+        
+        # Verifica se o placar está presente e no formato esperado
+        if placar_str and 'x' in placar_str:
+            try:
+                placar_home, placar_visitor = map(int, placar_str.split(' x '))
+            except ValueError:
+                # Se o placar for inválido, ignore o jogo
+                continue
+        else:
+            # Se o placar não estiver presente ou for inválido, ignore o jogo
+            continue
+
+        # Determina o status para ambos os times
+        status_home = determine_status(placar_home, placar_visitor, time_home, time_visitor, time_home)
+        status_visitor = determine_status(placar_home, placar_visitor, time_home, time_visitor, time_visitor)
+
+        # Cria um dicionário com as informações do jogo
+        game_info = {
+            'Horario': game.get('hour_match'),
+            'TeamA': time_home,
+            'TeamB': time_visitor,
+            'Placar': placar_str,
+            'status': status_home,  # Status do mandante
+            'Datetime': match_datetime,
+            'Hora': hour,
+            'Minuto': minute
+        }
+
+        # Cria uma cópia para o time visitante com seu status
+        game_info_visitor = game_info.copy()
+        game_info_visitor['status'] = status_visitor  # Status do visitante
+
+        # Adiciona o jogo ao dicionário correto
+        if time_home == teamA and time_visitor == teamB:
+            games_teamA_home[teamA].append(game_info)  # Jogos onde teamA é mandante
+        if (time_home == teamA and time_visitor == teamB) or (time_home == teamB and time_visitor == teamA):
+            all_head_to_head_games[teamA].append(game_info)  # Todos os confrontos entre os dois times
+
+    return games_teamA_home, all_head_to_head_games
 
 def limit_last_games(games_by_team):
     """Limit the results to the last 20 games per team."""
     for team, games in games_by_team.items():
-        games_by_team[team] = sorted(games, key=lambda x: (x['Hora'], x['Minuto']), reverse=True)[:20]
+        games_by_team[team] = sorted(games, key=lambda x: (x['Hora'], x['Minuto']), reverse=True)[:250]
 
 @kirongames.route('/')
 def index():
@@ -180,7 +245,7 @@ def index():
 
 @kirongames.route('/next-games')
 def next_games():
-    periodo = request.args.get('periodo', 48)
+    periodo = request.args.get('periodo', 72)
     liga = request.args.get('campeonato', '1')
     
     try:
@@ -207,24 +272,31 @@ def next_games():
 
 @kirongames.route('/get_game_details/<team_a>/<team_b>')
 def get_game_details(team_a, team_b):
-    periodo = request.args.get('periodo', 48)
+    periodo = request.args.get('periodo', 72)
     liga = request.args.get('campeonato', '1')
     
     try:
         response = get_api_data(liga, periodo)
-        print("response\n", response)
-
+        response_details = requests.get(f'http://62.171.162.25:5000/api/partidas?periodo=500')        
         if response.status_code == 200:
             games_data = response.json()
-
+            details_data = response_details.json()
+            
+            games_teamA_home, all_head_to_head_games = organize_games_details_by_teams(details_data, team_a, team_b)
+            
             # Organize games into the respective dictionaries
             games_by_team, _, all_games_by_team = organize_games_by_team(games_data)
             
             limit_last_games(games_by_team)
             limit_last_games(all_games_by_team)
+
             # Retrieve the specific team data
             team_a_data = games_by_team.get(team_a, [])
             team_b_data = games_by_team.get(team_b, [])
+            
+            # Retrieve the specific team data
+            teams_details_data = games_teamA_home.get(team_a, [])
+            head_to_head_data = all_head_to_head_games.get(team_a, [])
             
             # Retrieve the general data for both teams
             team_a_all_data = all_games_by_team.get(team_a, [])
@@ -235,6 +307,8 @@ def get_game_details(team_a, team_b):
                 'teamB': team_b_data,
                 'teamA_all': team_a_all_data,
                 'teamB_all': team_b_all_data,
+                'teams_details_data': teams_details_data,
+                'head_to_head_data': head_to_head_data,
             })
     except requests.exceptions.RequestException as e:
         flash(f'Ocorreu um erro ao se conectar à API: {str(e)}', 'danger')
@@ -243,7 +317,7 @@ def get_game_details(team_a, team_b):
     
 @kirongames.route('/get-games', methods=['GET'])
 def get_games():
-    periodo = request.args.get('periodo', 48)
+    periodo = request.args.get('periodo', 72)
     liga = request.args.get('campeonato', '1')
     
     try:

@@ -29,6 +29,10 @@
 <div id="game-details" style="display:none;">
   <h2>Detalhes do Jogo</h2>
   <div style="display: flex; justify-content: space-between;">
+    <div id="team-a-home-statistics" style="width: 45%;"></div>
+    <div id="team-a-statistics" style="width: 45%;"></div>
+  </div>
+  <div style="display: flex; justify-content: space-between;">
     <div id="team-a-details" style="width: 45%;"></div>
     <div id="team-a-home-details" style="width: 45%;"></div>
   </div>
@@ -80,7 +84,18 @@ let leagueId = 1;  // Valor padrão, por exemplo, para Itália
 
   // Carregar os jogos ao carregar a página ou mudar a liga
   window.onload = function() {
-    loadGamesByLeague(1);  // Carregar a liga padrão ao carregar a página
+    const currentUrl = window.location.href;
+
+    // Cria um objeto URL a partir da URL atual
+    const url = new URL(currentUrl);
+    
+    // Usa URLSearchParams para obter os parâmetros da URL
+    const params = new URLSearchParams(url.search);
+    
+    // Obtém o valor do parâmetro 'campeonato'
+    const campeonatoValue = params.get('campeonato');
+
+    loadGamesByLeague(campeonatoValue);  // Carregar a liga padrão ao carregar a página
   };
 
   // Atualiza os jogos ao mudar de liga
@@ -110,27 +125,167 @@ function showGameDetails(teamA, teamB, horario) {
   document.getElementById('team-b-details').innerHTML = '';
   document.getElementById('team-a-home-details').innerHTML = '';
   document.getElementById('team-b-home-details').innerHTML = '';
-
+  document.getElementById('team-a-statistics').innerHTML = '';
+  document.getElementById('team-a-home-statistics').innerHTML = '';
+  
   // Aqui, leagueId já está atualizado
   fetch(`/kirongames/get_game_details/${teamA}/${teamB}?campeonato=${campeonatoValue}`)
     .then(response => response.json())
     .then(data => {
+      console.log({'teams_details_data': data.teams_details_data, 'head_to_head_data': data.head_to_head_data})
       // Adiciona título para Time A com jogos gerais
       document.getElementById('team-a-details').innerHTML = 
-          `<h3>${teamA} - Geral</h3>` + generateTable(data.teamA_all);
+          `<h3 class="centered">${teamA} - Geral</h3>` + generateTable(data.teamA_all);
       
       // Adiciona título para Time A com jogos em casa
       document.getElementById('team-a-home-details').innerHTML = 
-          `<h3>${teamA} em casa</h3>` + generateTable(data.teamA);
+          `<h3 class="centered">${teamA} em casa</h3>` + generateTable(data.teamA);
 
       // Adiciona título para Time B com jogos gerais
       document.getElementById('team-b-details').innerHTML = 
-          `<h3>${teamB} - Geral</h3>` + generateTable(data.teamB_all);
+          `<h3 class="centered">${teamB} - Geral</h3>` + generateTable(data.teamB_all);
 
       // Adiciona título para Time B com jogos em casa
       document.getElementById('team-b-home-details').innerHTML = 
-          `<h3>${teamB} em casa</h3>` + generateTable(data.teamB);
+          `<h3 class="centered">${teamB} em casa</h3>` + generateTable(data.teamB);
+
+      // Adiciona estastísticas dos jogos em casa
+      document.getElementById('team-a-home-statistics').innerHTML = 
+          `<h3 class="centered">${teamA} em casa</h3>` + generateTableDetails(data.teams_details_data, teamA, teamB);
+      
+      // Adiciona estastísticas geral
+      document.getElementById('team-a-statistics').innerHTML = 
+      `<h3 class="centered">Geral</h3>` + generateTableDetails(data.head_to_head_data, teamA, teamB);
+      
     });
+}
+
+function generateTableDetails(teams_details, teamA, teamB){
+  // Inicializando contadores
+  let totalGames = teams_details.length;
+  let teamWins = 0, draws = 0, teamLosses = 0;
+  let goalsFor = 0, goalsAgainst = 0;
+
+  // Iterar pelos jogos para contar vitórias, derrotas e empates (jogos onde o time foi mandante)
+  teams_details.forEach(game => {
+    let [scoreA, scoreB] = game.Placar.split(' x ').map(Number);
+
+    // Se o time em foco foi o mandante
+    if (game.TeamA === teamA) {
+      goalsFor += scoreA;
+      goalsAgainst += scoreB;
+
+      if (scoreA > scoreB) {
+        teamWins++;
+      } else if (scoreA === scoreB) {
+        draws++;
+      } else {
+        teamLosses++;
+      }
+    }else if (game.TeamB === teamA){
+      goalsFor += scoreB;
+      goalsAgainst += scoreA;
+
+      if (scoreA < scoreB) {
+        teamWins++;
+      } else if (scoreA === scoreB) {
+        draws++;
+      } else {
+        teamLosses++;
+      }
+    }
+  });
+
+  // Calcular médias de gols
+  let avgGoalsFor = (goalsFor / totalGames).toFixed(2);
+  let avgGoalsAgainst = (goalsAgainst / totalGames).toFixed(2);
+  let sumAvg = (Number(avgGoalsFor) + Number(avgGoalsAgainst)).toFixed(1);
+
+  // Gerar a tabela de estatísticas
+  let table = `
+    <div class="centered bg-success">Média de gols por partida <br> <b>${sumAvg}</b></div>
+    <table class="modern-ui align-middle mb-0 table table-hover table-borderless">
+      <thead>
+        <tr>
+          <th class="centered">Jogos</th>
+          <th class="centered">${teamA} venceu</th>
+          <th class="centered">Empates</th>
+          <th class="centered">${teamB}</th>
+          <th class="centered">Gols (média) ${teamA}</th>
+          <th class="centered">Gols (média) ${teamB}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="centered">${totalGames}</td>
+          <td class="centered">${teamWins} <br> (${((teamWins / totalGames) * 100).toFixed(1)}%)</td>
+          <td class="centered">${draws} <br> (${((draws / totalGames) * 100).toFixed(1)}%)</td>
+          <td class="centered">${teamLosses} <br> (${((teamLosses / totalGames) * 100).toFixed(1)}%)</td>
+          <td class="centered">${goalsFor} <br> (${avgGoalsFor})</td>
+          <td class="centered">${goalsAgainst} <br> (${avgGoalsAgainst})</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+ 
+
+    const tableOver = generateOversTable(teams_details, teamA, teamB);
+    table += tableOver
+
+  return table;
+}
+
+function generateOversTable(teams_details, teamA, teamB) {
+  let over1_5 = 0, over2_5 = 0, over3_5 = 0, over4_5 = 0, ambasMarcam = 0;
+  let totalGames = 0;
+
+  // Contabilizar os overs para os jogos em que o time em foco foi mandante
+  teams_details.forEach(game => {
+    if (game.TeamA === teamA) {
+      let [scoreA, scoreB] = game.Placar.split(' x ').map(Number);
+      let totalGols = scoreA + scoreB;
+
+      // Verificar os limites para cada Over de forma hierárquica
+      if (totalGols >= 2) over1_5++;
+      if (totalGols >= 3) over2_5++;
+      if (totalGols >= 4) over3_5++;
+      if (totalGols >= 5) over4_5++;
+
+      // Verificar se ambos os times marcaram
+      if (scoreA > 0 && scoreB > 0) ambasMarcam++;
+
+      totalGames++;
+    }
+  });
+
+  // Calcular porcentagens
+  let over1_5Pct = ((over1_5 / totalGames) * 100).toFixed(1);
+  let over2_5Pct = ((over2_5 / totalGames) * 100).toFixed(1);
+  let over3_5Pct = ((over3_5 / totalGames) * 100).toFixed(1);
+  let over4_5Pct = ((over4_5 / totalGames) * 100).toFixed(1);
+  let ambasMarcamPct = ((ambasMarcam / totalGames) * 100).toFixed(1);
+
+  // Gerar HTML da tabela
+  let table = `<table class="modern-ui align-middle mb-0 table table-hover table-borderless">
+                <tbody>
+                  <tr>
+                    <th class="centered">Over 1.5</th>
+                    <th class="centered">Over 2.5</th>
+                    <th class="centered">Over 3.5</th>
+                    <th class="centered">Over 4.5 (5+)</th>
+                    <th class="centered">Ambas</th>
+                  </tr>
+                  <tr>
+                    <td class="bg-success centered">${over1_5} (${over1_5Pct}%)</td>
+                    <td class="bg-warning centered">${over2_5} (${over2_5Pct}%)</td>
+                    <td class="bg-danger centered">${over3_5} (${over3_5Pct}%)</td>
+                    <td class="bg-danger centered">${over4_5} (${over4_5Pct}%)</td>
+                    <td class="bg-warning centered">${ambasMarcam} (${ambasMarcamPct}%)</td>
+                  </tr>
+                </tbody>
+              </table>`;
+
+  return table;
 }
 
 function generateTable(teamData) {

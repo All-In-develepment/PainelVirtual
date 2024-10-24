@@ -3,7 +3,154 @@
 {% block title %}Jogos Estrela Bet{% endblock %}
 
 {% block body %}
-    <div class="row">
+    
+
+<!-- Botão para abrir o modal -->
+<!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#tiroSecoModal">
+    Filtro de Tiro Seco
+  </button> -->
+  
+  <!-- Modal -->
+  <!-- <div class="modal fade" id="tiroSecoModal" tabindex="-1" aria-labelledby="tiroSecoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="tiroSecoLabel">Padrões Para Tiro Seco</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body"> -->
+          <!-- Filtros -->
+          <!-- <form id="tiroSecoForm">
+            <div class="form-group">
+              <label for="mercado">Mercado</label>
+              <select class="form-control" id="mercado" name="mercado">
+                <option value="under0_5">Under 0.5</option>
+                <option value="under1_5">Under 1.5</option>
+                <option value="under1_5">Under 2.5</option>
+                <option value="under1_5">Under 3.5</option>
+
+                <option value="over2_5">Over 0.5</option>
+                <option value="over2_5">Over 1.5</option>
+                <option value="over2_5">Over 2.5</option>
+                <option value="over2_5">Over 3.5</option>
+
+                <option value="ambas_marcam">ambas_marcam_sim</option>
+                <option value="ambas_marcam">ambas_marcam_nao</option>
+
+                <option value="ParOuImpar">par</option>
+                <option value="ParOuImpar">impar</option> -->
+                <!-- Adicione mais mercados aqui -->
+              <!-- </select>
+            </div>
+            <div class="form-group">
+              <label for="liga">Liga</label>
+              <select class="form-control" id="liga" name="liga">
+                <option value="1">Euro Cup</option>
+                <option value="2">Copa do Mundo</option>
+                <option value="3">Premier League</option>
+                <option value="4">Sul-Americana</option> -->
+                <!-- Adicione mais ligas aqui -->
+              <!-- </select>
+            </div>
+          </form> -->
+          <!-- Relatório Gerado -->
+          <!-- <div id="relatorioTiroSeco"> -->
+            <!-- Aqui será gerado o relatório em formato de tabela -->
+          <!-- </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="gerarRelatorio()">Gerar Relatório</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  
+
+  <!-- <script>
+    function gerarRelatorio() {
+    const mercado = document.getElementById('mercado').value;
+    const liga = document.getElementById('liga').value;
+
+    fetch('/filtrar_tiro_seco', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+            mercado: mercado,
+            liga: liga
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let relatorio = `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Placar</th>
+                        <th>Tiro Seco (Sem Gale)</th>
+                        <th>1º Gale</th>
+                        <th>2º Gale</th>
+                        <th>Reds</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        data.forEach(jogo => {
+            relatorio += `
+                <tr>
+                    <td>${jogo.placar}</td>
+                    <td>${jogo.semGale ? '✔️' : ''}</td>
+                    <td>${jogo.primeiroGale ? '✔️' : ''}</td>
+                    <td>${jogo.segundoGale ? '✔️' : ''}</td>
+                    <td>${jogo.red ? '❌' : ''}</td>
+                </tr>`;
+        });
+
+        relatorio += '</tbody></table>';
+        document.getElementById('relatorioTiroSeco').innerHTML = relatorio;
+    })
+    .catch(error => {
+        console.error('Erro ao gerar o relatório:', error);
+    });
+}
+
+
+    // Aqui você pode adicionar outras funções ou código para o modal
+</script>
+ -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="row">
         <center>
             <a href="#" onclick="selectCampeonato('1')">
                 <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="flag italiano" width="60" />
@@ -55,9 +202,10 @@
         <br>
         <label for="campeonato">Campeonato:</label>
         <select id="campeonato" name="campeonato" onchange="updateParams()">
-            <option value="1">Italiano</option>
-            <option value="2">Inglês</option>
-            <option value="3">Espanhol</option>
+            <option value="1">Euro Cup</option>
+            <option value="2">Copa do Mundo</option>
+            <option value="3">Premier League</option>
+            <option value="4">Sul-Americana</option>
         </select>
     </form>
     
@@ -81,41 +229,41 @@
                                 {% if mercado == 'under0_5' %}
                                     {% if coluna['SomaGolsUnder0_5'] < 0.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'under1_5' %}
                                     {% if coluna['SomaGolsUnder1_5'] < 1.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'under2_5' %}
                                     {% if coluna['SomaGolsUnder2_5'] < 2.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'under3_5' %}
                                     {% if coluna['SomaGolsUnder3_5'] < 3.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% endif %}
@@ -123,84 +271,84 @@
                                 {% if mercado == 'over0_5' %}
                                     {% if coluna['SomaGols'] > 0.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'over1_5' %}
                                     {% if coluna['SomaGols'] > 1.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'over2_5' %}
                                     {% if coluna['SomaGols'] > 2.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'over3_5' %}
                                     {% if coluna['SomaGols'] > 3.5 %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% endif %}
-                                {% elif mercado.startswith('ambas_marcam') %}
+                            {% elif mercado.startswith('ambas_marcam') %}
                                 {% if mercado == 'ambas_marcam_sim' %}
-                                    {% if coluna['AmbasMarcam'] %}  {# Verifica se ambas marcaram #}
+                                    {% if coluna['AmbasMarcam'] %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% elif mercado == 'ambas_marcam_nao' %}
-                                {% if coluna['AmbasMarcamNao'] %}  
+                                    {% if coluna['AmbasMarcamNao'] %}
                                         <td style="text-align: center" class="bg-success">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% else %}
                                         <td style="text-align: center" class="bg-danger">  
-                                            {{ coluna['Resultado'] }}
+                                            {{ coluna['Resultado']|replace('+', '') }}
                                         </td>
                                     {% endif %}
                                 {% endif %}
                             {% elif mercado == 'par' %}
                                 {% if coluna['ParOuImpar'] == 'Par' %}
                                     <td style="text-align: center" class="bg-success">  
-                                        {{ coluna['Resultado'] }}
+                                        {{ coluna['Resultado']|replace('+', '') }}
                                     </td>
                                 {% else %}
                                     <td style="text-align: center" class="bg-danger">  
-                                        {{ coluna['Resultado'] }}
+                                        {{ coluna['Resultado']|replace('+', '') }}
                                     </td>
                                 {% endif %}
                             {% elif mercado == 'impar' %}
                                 {% if coluna['ParOuImpar'] == 'Ímpar' %}
                                     <td style="text-align: center" class="bg-success">  
-                                        {{ coluna['Resultado'] }}
+                                        {{ coluna['Resultado']|replace('+', '') }}
                                     </td>
                                 {% else %}
                                     <td style="text-align: center" class="bg-danger">  
-                                        {{ coluna['Resultado'] }}
+                                        {{ coluna['Resultado']|replace('+', '') }}
                                     </td>
                                 {% endif %}
                             {% endif %}
@@ -211,11 +359,11 @@
         </tbody>
     </table>
 {% else %}
+    <div class="alert alert-warning" role="alert">
+        Nenhum jogo encontrado.
+    </div>
+{% endif %}
 
-        <div class="alert alert-warning" role="alert">
-            Nenhum jogo encontrado.
-        </div>
-    {% endif %}
 </div>
 <script>
     function updateParams() {
@@ -235,6 +383,7 @@
 
     fetch(url)
         .then(response => {
+            console.log(response)
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

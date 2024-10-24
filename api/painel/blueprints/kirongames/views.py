@@ -141,42 +141,47 @@ def index():
     liga = request.args.get('campeonato', '1')
     
     header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjQtMTEtMDEgMTU6MjM6NTkiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEwLTMxIDE4OjI0OjAwIiwiSVAiOiIxODkuNTkuMTk1LjMiLCJHdWlkIjoiMzMxZTVkMzUtODcxOC00YTRiLTk0NDgtZGJmMDMwZmUwMzhiIiwiRGF0YUV4cGlyYWNhb0JvdCI6IiIsIm5iZiI6MTcyNzgwNzA0MCwiZXhwIjoxNzMwMzk5MDQwLCJpYXQiOjE3Mjc4MDcwNDAsImlzcyI6InNlbGYiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjU3NzMxLyJ9.2nn0i8OaZO0AEZWJu5kHhnqEZ2fgJ-26T2DT5U17dxE'}
-    resposta =  requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+    resposta =  requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/futebolvirtual?liga={liga}&futuro=false&Horas=Horas{periodo}&tipoOdd=&dadosAlteracao=&filtros=&confrontos=false&hrsConfrontos=240', headers=header)
     if resposta.status_code == 200:
         json_result = resposta.json()
+        print(resposta.json())
         for linha in json_result['Linhas']:
             for coluna in linha['Colunas']:
                 if 'Resultado' in coluna:
-                    soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
-                    coluna['SomaGols'] = soma_gols
-                    # Calcule a soma dos gols para os outros mercados
-                    coluna['SomaGols1_5'] = soma_gols
-                    coluna['SomaGols0_5'] = soma_gols
+                    resultado = coluna['Resultado']
+                    try:
+                        # Obter gols de acordo com o formato do resultado
+                        gols_time1, gols_time2 = map(lambda x: int(x.replace('+', '').strip()), resultado.split('-'))
+                        soma_gols = gols_time1 + gols_time2
 
+                        coluna['SomaGols'] = soma_gols
+                        coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
+                        coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
+                        coluna['ParOuImpar'] = 'Par' if soma_gols % 2 == 0 else 'Ímpar'
 
-                    coluna['SomaGolsUnder0_5'] = soma_gols
-                    coluna['SomaGolsUnder1_5'] = soma_gols
-                    coluna['SomaGolsUnder2_5'] = soma_gols
-                    coluna['SomaGolsUnder3_5'] = soma_gols
+                        # Adicionar lógicas para diferentes mercados
+                        coluna['SomaGolsUnder0_5'] = soma_gols
+                        coluna['SomaGolsUnder1_5'] = soma_gols
+                        coluna['SomaGolsUnder2_5'] = soma_gols
+                        coluna['SomaGolsUnder3_5'] = soma_gols
+                        coluna['SomaGols1_5'] = soma_gols
+                        coluna['SomaGols0_5'] = soma_gols
 
-                    # Calculos para Ambas Marcam
-                    gols_time1 = int(coluna['Resultado'].split('-')[0])
-                    gols_time2 = int(coluna['Resultado'].split('-')[1])
-                    
-                    coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
-                    coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
-                    coluna['SomaGols'] = gols_time1 + gols_time2
+                    except ValueError as e:
+                        print(f"Erro ao processar o resultado: {resultado} - Erro: {e}")
 
-                    # Adicionando a lógica para Par ou Ímpar
-                    if soma_gols % 2 == 0:
-                        coluna['ParOuImpar'] = 'Par'
-                    else:
-                        coluna['ParOuImpar'] = 'Ímpar'
     else:
         json_result = []
         print(resposta.status_code)
 
     return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
+
+
+
+
+
+
+    
 
 @kirongames.route('/next-games')
 def next_games():

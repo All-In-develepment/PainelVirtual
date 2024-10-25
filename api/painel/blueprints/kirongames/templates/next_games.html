@@ -19,13 +19,6 @@
   </center>
 </div>
 
-<script>
-  // Chamar a função showGameDetails ao carregar a página para o primeiro jogo
-  window.onload = function() {
-    showGameDetails(firstTeamA, firstTeamB, firstHorario);
-  };
-</script>
-
 <div id="game-details" style="display:none;">
   <h2>Detalhes do Jogo</h2>
   <div style="display: flex; justify-content: space-between;">
@@ -43,45 +36,47 @@
 </div>
 
 <script>
-// Variável global para armazenar o leagueId
-let leagueId = 1;  // Valor padrão, por exemplo, para Itália
-  
 // Função para carregar os jogos dinamicamente via AJAX
-  function loadGamesByLeague(leagueId) {
-    fetch(`/kirongames/get-games?campeonato=${leagueId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.message) {
-          alert(data.message);
-          return;
-        }
+function loadGamesByLeague(leagueId) {
+  fetch(`/kirongames/get-games?campeonato=${leagueId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+        return;
+      }
+      // Atualiza o conteúdo dos botões dinamicamente
+      let buttonsHtml = '';
 
-        // Atualiza o conteúdo dos botões dinamicamente
-        let buttonsHtml = '';
-        Object.keys(data).forEach(team => {
-          let games = data[team];
-          let firstGame = games[0];
+     const teams = Object.keys(data).map(team => data[team]).sort((a, b) => {
+      const horarioA = a[0].Horario;
+      const horarioB = b[0].Horario;
+  
+      return horarioA.localeCompare(horarioB); 
+    });
 
-          buttonsHtml += `
-            <button class="btn btn-info" onclick="showGameDetails('${firstGame.TeamA}', '${firstGame.TeamB}', '${firstGame.Horario}')">
-              ${firstGame.TeamA} vs ${firstGame.TeamB} <br>
-              ${firstGame.Horario}
-            </button>
-          `;
-        });
+      teams.forEach(team => {
+        // Pega o primeiro jogo após a ordenação
+        let firstGame = team[0];
 
-        document.getElementById('games-buttons').innerHTML = buttonsHtml;
+        buttonsHtml += `
+          <button class="btn btn-info" onclick="showGameDetails('${firstGame.TeamA}', '${firstGame.TeamB}', '${firstGame.Horario}')">
+            ${firstGame.Horario} <br>
+            ${firstGame.TeamA} vs ${firstGame.TeamB} 
+          </button>
+        `;
+      });
 
-        // Chamar showGameDetails para o primeiro jogo
-        if (Object.keys(data).length > 0) {
-          let firstTeam = Object.keys(data)[0];
-          let firstGame = data[firstTeam][0];
-          showGameDetails(firstGame.TeamA, firstGame.TeamB, firstGame.Horario);
-        }
-      })
-      .catch(error => console.error('Erro ao carregar os jogos:', error));
-  }
+      document.getElementById('games-buttons').innerHTML = buttonsHtml;
 
+      // Chamar showGameDetails para o primeiro jogo
+      if (teams.length > 0) {
+        const firstGame = teams[0][0];
+        showGameDetails(firstGame.TeamA, firstGame.TeamB, firstGame.Horario);
+      }
+    })
+    .catch(error => console.error('Erro ao carregar os jogos:', error));
+}
   // Carregar os jogos ao carregar a página ou mudar a liga
   window.onload = function() {
     const currentUrl = window.location.href;
@@ -132,7 +127,6 @@ function showGameDetails(teamA, teamB, horario) {
   fetch(`/kirongames/get_game_details/${teamA}/${teamB}?campeonato=${campeonatoValue}`)
     .then(response => response.json())
     .then(data => {
-      console.log({'teams_details_data': data.teams_details_data, 'head_to_head_data': data.head_to_head_data})
       // Adiciona título para Time A com jogos gerais
       document.getElementById('team-a-details').innerHTML = 
           `<h3 class="centered">${teamA} - Geral</h3>` + generateTable(data.teamA_all);
@@ -168,7 +162,7 @@ function generateTableDetails(teams_details, teamA, teamB){
 
   // Iterar pelos jogos para contar vitórias, derrotas e empates (jogos onde o time foi mandante)
   teams_details.forEach(game => {
-    let [scoreA, scoreB] = game.Placar.split(' x ').map(Number);
+    let [scoreA, scoreB] = game.Placar.split('-').map(Number);
 
     // Se o time em foco foi o mandante
     if (game.TeamA === teamA) {
@@ -227,7 +221,6 @@ function generateTableDetails(teams_details, teamA, teamB){
       </tbody>
     </table>
   `;
- 
 
     const tableOver = generateOversTable(teams_details, teamA, teamB);
     table += tableOver
@@ -241,8 +234,8 @@ function generateOversTable(teams_details, teamA, teamB) {
 
   // Contabilizar os overs para os jogos em que o time em foco foi mandante
   teams_details.forEach(game => {
-    if (game.TeamA === teamA) {
-      let [scoreA, scoreB] = game.Placar.split(' x ').map(Number);
+    if (game.TeamA === teamA || game.TeamB === teamA) {
+      let [scoreA, scoreB] = game.Placar.split('-').map(Number);
       let totalGols = scoreA + scoreB;
 
       // Verificar os limites para cada Over de forma hierárquica

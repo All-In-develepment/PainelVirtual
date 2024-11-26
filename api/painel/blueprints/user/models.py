@@ -11,6 +11,7 @@ from flask_login import UserMixin
 
 from itsdangerous import URLSafeTimedSerializer
 
+from api.painel.blueprints.wallet.models.wallet import Wallet
 from lib.util_sqlalchemy import ResourceMixin, AwareDateTime
 from painel.blueprints.billing.models.credit_card import CreditCard
 from painel.blueprints.billing.models.subscription import Subscription
@@ -33,6 +34,8 @@ class User(UserMixin, ResourceMixin, db.Model):
     subscription = db.relationship(Subscription, uselist=False,
                                     backref='users', passive_deletes=True)
     invoices = db.relationship(Invoice, backref='users', passive_deletes=True)
+    
+    wallets = db.relationship(Wallet, backref='users', passive_deletes=True)
 
     # Authentication.
     role = db.Column(db.Enum(*ROLE, name='role_types', native_enum=False),

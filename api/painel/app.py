@@ -9,6 +9,7 @@ from flask_login import LoginManager
 from celery import Celery
 from itsdangerous import URLSafeTimedSerializer
 
+from painel.blueprints.wallet import wallet
 from painel.blueprints.admin import admin
 from painel.blueprints.kirongames import kirongames
 from painel.blueprints.page import page
@@ -81,6 +82,7 @@ def create_app(settings_override=None):
     app.register_blueprint(billing)
     app.register_blueprint(stripe_webhook)
     app.register_blueprint(kirongames)
+    app.register_blueprint(wallet)
     template_processors(app)
     extensions(app)
     authentication(app, User)

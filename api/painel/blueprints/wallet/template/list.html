@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Histórico de Transações</title>
+</head>
+<body>
+    <h1>Histórico de Transações</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Resultado</th>
+                <th>Saldo</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.kind }}</td>
+                <td>{{ transaction.value }}</td>
+                <td>{{ transaction.result }}</td>
+                <td>{{ transaction.balance }}</td>
+                <td>{{ transaction.created_on }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

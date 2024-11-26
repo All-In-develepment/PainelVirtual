@@ -216,37 +216,35 @@ def index():
     resposta =  get_api_data(liga, periodo)
     if resposta.status_code == 200:
         json_result = resposta.json()
+        print(json_result)
         for linha in json_result['Linhas']:
             for coluna in linha['Colunas']:
                 if 'Resultado' in coluna:
-                    soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
-                    coluna['SomaGols'] = soma_gols
-                    # Calcule a soma dos gols para os outros mercados
-                    coluna['SomaGols1_5'] = soma_gols
-                    coluna['SomaGols0_5'] = soma_gols
+                    resultado = coluna['Resultado']
+                    try:
+                        # Obter gols de acordo com o formato do resultado
+                        gols_time1, gols_time2 = map(lambda x: int(x.replace('+', '').strip()), resultado.split('-'))
+                        soma_gols = gols_time1 + gols_time2
 
+                        coluna['SomaGols'] = soma_gols
+                        coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
+                        coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
+                        coluna['ParOuImpar'] = 'Par' if soma_gols % 2 == 0 else 'Ímpar'
 
-                    coluna['SomaGolsUnder0_5'] = soma_gols
-                    coluna['SomaGolsUnder1_5'] = soma_gols
-                    coluna['SomaGolsUnder2_5'] = soma_gols
-                    coluna['SomaGolsUnder3_5'] = soma_gols
+                        # Adicionar lógicas para diferentes mercados
+                        coluna['SomaGolsUnder0_5'] = soma_gols
+                        coluna['SomaGolsUnder1_5'] = soma_gols
+                        coluna['SomaGolsUnder2_5'] = soma_gols
+                        coluna['SomaGolsUnder3_5'] = soma_gols
+                        coluna['SomaGols1_5'] = soma_gols
+                        coluna['SomaGols0_5'] = soma_gols
 
-                    # Calculos para Ambas Marcam
-                    gols_time1 = int(coluna['Resultado'].split('-')[0])
-                    gols_time2 = int(coluna['Resultado'].split('-')[1])
-                    
-                    coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
-                    coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
-                    coluna['SomaGols'] = gols_time1 + gols_time2
+                    except ValueError as e:
+                        print(f"Erro ao processar o resultado: {resultado} - Erro: {e}")
 
-                    # Adicionando a lógica para Par ou Ímpar
-                    if soma_gols % 2 == 0:
-                        coluna['ParOuImpar'] = 'Par'
-                    else:
-                        coluna['ParOuImpar'] = 'Ímpar'
-    else:
-        json_result = []
-        print(resposta.status_code)
+        else:
+            json_result = []
+            print(resposta.status_code)
 
     return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
 

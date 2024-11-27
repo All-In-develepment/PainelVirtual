@@ -151,15 +151,15 @@ def organize_games_details_by_teams(games_data, teamA, teamB):
     # Dicionários para armazenar os jogos
     games_teamA_home = defaultdict(list)  # Jogos com teamA como mandante contra teamB
     all_head_to_head_games = defaultdict(list)  # Todos os jogos entre teamA e teamB
-
+    print(games_data, teamA, teamB)
     # Percorre todos os jogos fornecidos
     for game in games_data:
         # Extrai informações relevantes do jogo
-        time_a = game.get('TimeA')
-        time_b = game.get('TimeB')
-        hora_str = game.get('Hora')
-        minuto_str = game.get('Minuto')
-        placar_str = game.get('Resultado')
+        time_a = game.get('team_home')
+        time_b = game.get('team_visitor')
+        hora_str = game.get('hora')
+        minuto_str = game.get('minuto')
+        placar_str = game.get('scoreboard').replace(' x ','-')
         
         # Verifica se o placar está presente e no formato esperado
         if placar_str and '-' in placar_str:
@@ -282,10 +282,11 @@ def next_games():
 def get_game_details(team_a, team_b):
     periodo = request.args.get('periodo', 72)
     liga = request.args.get('campeonato', '1')
-    
     try:
         response = get_api_data(liga, periodo)
-        response_details = requests.get(f'http://62.171.162.25:5000/api/jogos365/{team_a}/{team_b}/500')        
+        response_details = requests.get(f'http://62.171.162.25:5000/api/partidas/{team_a}/{team_b}/100')  
+        
+        print(response_details.json())      
         # response_details = get_api_data(liga, 240)        
 
         if response.status_code == 200:

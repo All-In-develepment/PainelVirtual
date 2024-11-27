@@ -29,9 +29,24 @@
   <!--<div id="game-details" style="display:none;">-->
   <div id="game-details">
     <h3 class="page-title">Detalhes do Jogo</h3>
-    <div style="display: flex; justify-content: space-between;">
-      <div id="team-a-home-statistics" style="width: 45%;"></div>
-      <div id="team-a-statistics" style="width: 45%;"></div>
+    <div class="row">
+      <!-- Team in home -->
+      <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div id="team-a-home-statistics" class="table-responsive col-12"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team General -->
+      <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div id="team-a-statistics" class="table-responsive col-12"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div style="display: flex; justify-content: space-between;">
       <div id="team-a-details" style="width: 45%;"></div>
@@ -207,7 +222,7 @@ function generateTableDetails(teams_details, teamA, teamB){
   // Gerar a tabela de estatísticas
   let table = `
     <div class="centered bg-success">Média de gols por partida <br> <b>${sumAvg}</b></div>
-    <table class="modern-ui align-middle mb-0 table table-hover table-borderless">
+    <table class="table">
       <thead>
         <tr>
           <th class="centered">Jogos</th>
@@ -268,7 +283,7 @@ function generateOversTable(teams_details, teamA, teamB) {
   let ambasMarcamPct = ((ambasMarcam / totalGames) * 100).toFixed(1);
 
   // Gerar HTML da tabela
-  let table = `<table class="modern-ui align-middle mb-0 table table-hover table-borderless">
+  let table = `<table class="table">
                 <tbody>
                   <tr>
                     <th class="centered">Over 1.5</th>

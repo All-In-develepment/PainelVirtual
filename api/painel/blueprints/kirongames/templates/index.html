@@ -71,6 +71,11 @@
 					</div>
 				</div>
 			</div>
+			<div style="text-align: right;">
+				<button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
+					Busca Automática de Padrões para Tiro Seco
+				</button>
+			</div>
 			
 			{% if games != 0 %}
 				<div class="row">
@@ -291,7 +296,142 @@
 					document.getElementById('campeonato').value = storedCampeonato;
 			}
 	};
-
-			
 	</script>
+	<!-- MODAL -->
+	<div id="ligaModal" class="modal" style="display: none;">
+		<div class="main-panel">
+			<div class="modal-content">
+				<span class="close" id="closeModalButton">&times;</span>
+				<h2 id="head-busca"></h2>
+				<div id="tabelas">
+					<div>
+						<h4 id="leagueId">Italiano</h4>
+						<table class="table">
+							<thead>
+							<tr>
+								<th>Placar</th>
+								<th>S/Gale</th>
+								<th>1º Gale</th>
+								<th>2º Gale</th>
+								<th>Reds</th>
+								<th>Green</th>
+								<th>%</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>1</td>
+								<td>Juventus</td>
+								<td>75</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<h4>Inglês</h4>
+				<table class="table">
+					<thead>
+							<tr>
+									<th>#</th>
+									<th>Time</th>
+									<th>Pontos</th>
+							</tr>
+					</thead>
+					<tbody>
+							<tr>
+									<td>1</td>
+									<td>Manchester City</td>
+									<td>80</td>
+							</tr>
+					</tbody>
+				</table>
+				<h4>Espanhol</h4>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Time</th>
+								<th>Pontos</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>1</td>
+								<td>Real Madrid</td>
+								<td>78</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		function openModal(){
+			const openModalButton = document.getElementById('openModalButton');
+			const closeModalButton = document.getElementById('closeModalButton');
+			const modal = document.getElementById('ligaModal');
+	
+			let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
+			let storedPeriodo = document.getElementById('periodo').value
+			let storedCampeonato = document.getElementById('campeonato').value
+	
+			document.getElementById('head-busca').innerHTML = `
+					Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
+	
+			document.getElementById('leagueId').innerHTML = storedMercado
+	
+			modal.style.display = 'block';
+	
+			// Fechar o modal ao clicar no "X"
+			closeModalButton.addEventListener('click', () => {
+				modal.style.display = 'none';
+			});
+	
+			// Fechar o modal ao clicar fora da caixa do modal
+			window.addEventListener('click', (event) => {
+				if (event.target === modal) {
+					modal.style.display = 'none';
+				}
+			});
+		}
+	</script>
+	
+	<style>
+		/* Estilos do modal */
+	.modal {
+		display: none; /* Inicialmente oculto */
+		position: fixed; /* Fica fixo na tela */
+		z-index: 1; /* Coloca o modal acima do conteúdo */
+		left: 0;
+		top: 0;
+		width: 100%; /* 100% da largura da tela */
+		height: 100%; /* 100% da altura da tela */
+		background-color: rgba(0, 0, 0, 0.4); /* Fundo semitransparente */
+	}
+	
+	/* Conteúdo do modal */
+	/*.modal-content {
+		background-color: #fefefe;
+		margin: 15% auto;
+		padding: 20px;
+		border: 1px solid #888;
+		width: 80%; /* Ajuste conforme necessário */
+	}
+	
+	/* Botão de fechar (X) */
+	.close {
+		color: #aaa;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
+	
+	.close:hover,
+	.close:focus {
+		color: black;
+		text-decoration: none;
+		cursor: pointer;
+	}*/
+	
+	</style>
 {% endblock %}

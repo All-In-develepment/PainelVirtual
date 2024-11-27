@@ -284,7 +284,7 @@ def get_game_details(team_a, team_b):
     liga = request.args.get('campeonato', '1')
     try:
         response = get_api_data(liga, periodo)
-        response_details = requests.get(f'http://62.171.162.25:5000/api/partidas/{team_a}/{team_b}/100')  
+        response_details = requests.get(f'http://62.171.162.25:5000/api/partidas/{team_a}/{team_b}/500')  
         
         print(response_details.json())      
         # response_details = get_api_data(liga, 240)        

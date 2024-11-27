@@ -5,33 +5,42 @@
 {% endblock %}
 <!-- italy = 1; england = 2; spain = 3 -->
 {% block body %}
-<div class="row">
-  <center>
-    <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="filterByLeague(1)" style="cursor: pointer;" />
-    <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="filterByLeague(2)" style="cursor: pointer;" />
-    <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="filterByLeague(3)" style="cursor: pointer;" />
-  </center>
-</div>
-
-<div class="button-container">
-  <center>
-    <div id="games-buttons"></div>
-  </center>
-</div>
-
-<div id="game-details" style="display:none;">
-  <h2>Detalhes do Jogo</h2>
-  <div style="display: flex; justify-content: space-between;">
-    <div id="team-a-home-statistics" style="width: 45%;"></div>
-    <div id="team-a-statistics" style="width: 45%;"></div>
+<div class="content-wrapper">
+  <div class="page-header">
+    <div class="row col-12">
+      <center>
+        <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="filterByLeague(1)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="filterByLeague(2)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="filterByLeague(3)" style="cursor: pointer;" />
+      </center>
+    </div>
   </div>
-  <div style="display: flex; justify-content: space-between;">
-    <div id="team-a-details" style="width: 45%;"></div>
-    <div id="team-a-home-details" style="width: 45%;"></div>
+
+  <div class="page-header">
+    <div class="row col-12">
+      <div class="button-container">
+        <center>
+          <div id="games-buttons"></div>
+        </center>
+      </div>
+    </div>
   </div>
-  <div style="display: flex; justify-content: space-between;">
-    <div id="team-b-details" style="width: 45%;"></div>
-    <div id="team-b-home-details" style="width: 45%;"></div>
+
+  <!--<div id="game-details" style="display:none;">-->
+  <div id="game-details">
+    <h3 class="page-title">Detalhes do Jogo</h3>
+    <div style="display: flex; justify-content: space-between;">
+      <div id="team-a-home-statistics" style="width: 45%;"></div>
+      <div id="team-a-statistics" style="width: 45%;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <div id="team-a-details" style="width: 45%;"></div>
+      <div id="team-a-home-details" style="width: 45%;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <div id="team-b-details" style="width: 45%;"></div>
+      <div id="team-b-home-details" style="width: 45%;"></div>
+    </div>
   </div>
 </div>
 
@@ -48,7 +57,7 @@ function loadGamesByLeague(leagueId) {
       // Atualiza o conteúdo dos botões dinamicamente
       let buttonsHtml = '';
 
-     const teams = Object.keys(data).map(team => data[team]).sort((a, b) => {
+      const teams = Object.keys(data).map(team => data[team]).sort((a, b) => {
       const horarioA = a[0].Horario;
       const horarioB = b[0].Horario;
   

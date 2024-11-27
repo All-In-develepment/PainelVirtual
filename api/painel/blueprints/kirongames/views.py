@@ -18,7 +18,7 @@ def get_api_data(liga, periodo):
     header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjQtMTEtMDEgMTU6MjM6NTkiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEwLTMxIDE4OjI0OjAwIiwiSVAiOiIxODkuNTkuMTk1LjMiLCJHdWlkIjoiMzMxZTVkMzUtODcxOC00YTRiLTk0NDgtZGJmMDMwZmUwMzhiIiwiRGF0YUV4cGlyYWNhb0JvdCI6IiIsIm5iZiI6MTcyNzgwNzA0MCwiZXhwIjoxNzMwMzk5MDQwLCJpYXQiOjE3Mjc4MDcwNDAsImlzcyI6InNlbGYiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjU3NzMxLyJ9.2nn0i8OaZO0AEZWJu5kHhnqEZ2fgJ-26T2DT5U17dxE'
+        'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'
     }
  
     #response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
@@ -213,7 +213,7 @@ def index():
     periodo = ( request.args.get('periodo', 24))  # valor padrão de 12
     liga = request.args.get('campeonato', '1')
     
-    header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjQtMTEtMDEgMTU6MjM6NTkiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEwLTMxIDE4OjI0OjAwIiwiSVAiOiIxODkuNTkuMTk1LjMiLCJHdWlkIjoiMzMxZTVkMzUtODcxOC00YTRiLTk0NDgtZGJmMDMwZmUwMzhiIiwiRGF0YUV4cGlyYWNhb0JvdCI6IiIsIm5iZiI6MTcyNzgwNzA0MCwiZXhwIjoxNzMwMzk5MDQwLCJpYXQiOjE3Mjc4MDcwNDAsImlzcyI6InNlbGYiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjU3NzMxLyJ9.2nn0i8OaZO0AEZWJu5kHhnqEZ2fgJ-26T2DT5U17dxE'}
+    header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'}
     resposta =  requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
     if resposta.status_code == 200:
         json_result = resposta.json()

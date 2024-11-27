@@ -12,7 +12,7 @@ services:
     env_file:
       - api/.env
     volumes:
-      - .:/app
+      - .:/api
     ports:
       - '8000:8000'
 

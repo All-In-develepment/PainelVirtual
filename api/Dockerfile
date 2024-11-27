@@ -13,4 +13,6 @@ RUN pip install -r requirements.txt
 COPY . .
 RUN pip install --editable .
 
-CMD gunicorn -b 0.0.0.0:8000 --access-logfile - "painel.app:create_app()"
+# CMD gunicorn -b 0.0.0.0:8000 --access-logfile - --reload "painel.app:create_app()"
+CMD gunicorn -b 0.0.0.0:8000 --access-logfile - --reload "painel.app:create_app()"
+

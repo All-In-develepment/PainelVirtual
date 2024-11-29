@@ -4,6 +4,7 @@ import requests
 from collections import defaultdict
 from datetime import datetime
 import re
+import pandas as pd
 
 kirongames = Blueprint('kirongames', __name__, template_folder='templates', url_prefix='/kirongames')
 
@@ -252,6 +253,149 @@ def index():
 
     return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
 
+@kirongames.route('/auto-search/<mercado>', methods=['GET'])
+def auto_search(mercado):
+    periodo = request.args.get('periodo', 12)
+    liga = request.args.get('campeonato', '1')
+    
+    mercado_name = mercado.split('_')[0]
+    mercado = float(mercado.split('_')[1])
+    operator = ''
+    print(mercado_name)
+    if mercado_name == 'Over':
+        operator = '>' 
+    elif mercado_name == 'Under':
+        operator = '<'
+    
+    try:
+        response = get_api_data(liga, periodo)
+        print(response)
+        if response.status_code == 200:
+            games_data = response.json()
+            df = create_dataframe(games_data)
+            
+            df_resultados = pd.DataFrame()
+            indice_result = 0
+            
+            for hora_atual, hora_acima in zip(df.index[::-1], df.index[::-1][1:]):
+                linha_atual = df.loc[hora_atual]
+                linha_acima = df.loc[hora_acima]
+                
+                for minuto in df.columns:
+                    valor_acima = linha_acima[minuto]
+                    coluna_pos = df.columns.get_loc(minuto)
+                    try:
+                        coluna_0 = linha_acima[minuto]
+                        soma_coluna_0 = sum(map(int, coluna_0.split("-")))
+                        coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
+                    except:
+                        coluna_0 = "Não há"
+                        soma_coluna_0 = 0
+                        coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
+                    try:
+                        coluna_1 = linha_acima[df.columns[coluna_pos + 1]]
+                        soma_coluna_1 = sum(map(int, coluna_1.split("-")))
+                        coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
+                    except:
+                        coluna_1 = "Não há"
+                        soma_coluna_1 = 0
+                        coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
+                    try:
+                        coluna_2 = linha_acima[df.columns[coluna_pos + 2]]
+                        soma_coluna_2 = sum(map(int, coluna_2.split("-")))
+                        coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
+                    except:
+                        coluna_2 = "Não há"
+                        soma_coluna_2 = 0
+                        coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
+
+                    if (eval(coluna_0)):
+                        json_row = {
+                            "placar": f"{linha_atual[minuto]}",
+                            "tiro": 0,
+                            "resultado": "Green"
+                        }
+                        df_result_row = pd.DataFrame(json_row, index=[indice_result])
+                        df_resultados = pd.concat([df_resultados, df_result_row])
+
+                    elif (eval(coluna_1)):
+                        json_row = {
+                            "placar": f"{linha_atual[minuto]}",
+                            "tiro": 1,
+                            "resultado": "Green"
+                        }
+                        df_result_row = pd.DataFrame(json_row, index=[indice_result])
+                        df_resultados = pd.concat([df_resultados, df_result_row])
+
+                    elif (eval(coluna_2)):
+                        json_row = {
+                            "placar": f"{linha_atual[minuto]}",
+                            "tiro": 2,
+                            "resultado": "Green"
+                        }
+                        df_result_row = pd.DataFrame(json_row, index=[indice_result])
+                        df_resultados = pd.concat([df_resultados, df_result_row])
+
+                    else:
+                        json_row = {
+                            "placar": f"{linha_atual[minuto]}",
+                            "tiro": 4,
+                            "resultado": "Red"
+                        }
+                        df_result_row = pd.DataFrame(json_row, index=[indice_result])
+                        df_resultados = pd.concat([df_resultados, df_result_row])
+                    
+                    indice_result += 1
+                    
+            # Calculando os valores agrupados para consolidar
+            tiro_contagem = df_resultados.groupby(["placar", "tiro", "resultado"])["tiro"].count()
+            media = (
+                (df_resultados.groupby(["placar", "resultado"])["tiro"].count())
+                / (df_resultados.groupby(["placar"])["tiro"].count())
+            ) * 100
+
+            # Criando um DataFrame consolidado
+            resultados_consolidados = []
+
+            # Iterando sobre os placares únicos
+            for placar in df_resultados["placar"].unique():
+                # Contando os tiros para o placar
+                tiros = tiro_contagem.loc[placar] if placar in tiro_contagem.index else pd.Series()
+                
+                # Extraindo dados para cada tipo de tiro
+                tiro_seco = tiros.get((0, "Green"), 0)
+                primeiro_gale = tiros.get((1, "Green"), 0)
+                segundo_gale = tiros.get((2, "Green"), 0)
+                red = tiros.get((4, "Red"), 0)
+                green = tiro_seco + primeiro_gale + segundo_gale  # Somando os "Green"
+                
+                # Calculando a assertividade
+                assertividade = media.loc[placar, "Green"] if (placar, "Green") in media.index else 0
+
+                # Adicionando os valores ao resultado consolidado
+                resultados_consolidados.append({
+                    "placar": placar,
+                    "tiro seco": tiro_seco,
+                    "primeiro gale": primeiro_gale,
+                    "segundo gale": segundo_gale,
+                    "red": red,
+                    "green": green,
+                    "assertividade": round(assertividade, 2),
+                })
+
+            # Convertendo o resultado consolidado em DataFrame
+            df_consolidado = pd.DataFrame(resultados_consolidados)
+            df_consolidado = df_consolidado.sort_values(by="assertividade", ascending=False)
+
+            # Exibindo o Datarame final
+            response = df_consolidado.to_json()
+            print(response)
+            return response
+        
+    except requests.exceptions.RequestException as e:
+        flash(f'Ocorreu um erro ao se conectar à API: {str(e)}', 'danger')
+
+
 @kirongames.route('/next-games')
 def next_games():
     periodo = request.args.get('periodo', 72)
@@ -348,3 +492,32 @@ def get_games():
 
     except requests.exceptions.RequestException as e:
         return jsonify({'message': f'Ocorreu um erro ao se conectar à API: {str(e)}'}), 500
+    
+def create_dataframe(games_data):
+    # Inicializar uma lista para construir a tabela
+    tabela = []
+
+    # Estruturar os dados para criar a tabela
+    for linha in games_data['Linhas']:
+        hora = linha['Hora']
+        linha_dict = {"Hora": hora}  # Começa com a hora como referência
+
+        for coluna in linha['Colunas']:
+            minuto = coluna.get("Minuto")  # Extrai o minuto
+            resultado = coluna.get("Resultado", "-")  # Extrai o resultado ou usa "-"
+            
+            if minuto:
+                linha_dict[minuto] = resultado  # Adiciona o resultado no minuto correspondente
+
+        tabela.append(linha_dict)  # Adiciona a linha estruturada na tabela
+
+    # Criar o DataFrame a partir da tabela
+    df = pd.DataFrame(tabela)
+
+    # Definir a coluna "Hora" como índice
+    df.set_index("Hora", inplace=True)
+
+    # Ordenar as colunas por minuto (caso necessário)
+    df = df.sort_index(axis=1)
+    
+    return df

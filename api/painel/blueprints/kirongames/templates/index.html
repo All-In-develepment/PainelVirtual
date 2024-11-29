@@ -299,102 +299,86 @@
 	</script>
 	<!-- MODAL -->
 	<div id="ligaModal" class="modal" style="display: none;">
-		<div class="main-panel">
-			<div class="modal-content">
-				<span class="close" id="closeModalButton">&times;</span>
-				<h2 id="head-busca"></h2>
-				<div id="tabelas">
-					<div>
-						<h4 id="leagueId">Italiano</h4>
-						<table class="table">
-							<thead>
-							<tr>
-								<th>Placar</th>
-								<th>S/Gale</th>
-								<th>1º Gale</th>
-								<th>2º Gale</th>
-								<th>Reds</th>
-								<th>Green</th>
-								<th>%</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>1</td>
-								<td>Juventus</td>
-								<td>75</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				<h4>Inglês</h4>
-				<table class="table">
-					<thead>
-							<tr>
-									<th>#</th>
-									<th>Time</th>
-									<th>Pontos</th>
-							</tr>
-					</thead>
-					<tbody>
-							<tr>
-									<td>1</td>
-									<td>Manchester City</td>
-									<td>80</td>
-							</tr>
-					</tbody>
-				</table>
-				<h4>Espanhol</h4>
-					<table class="table">
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Time</th>
-								<th>Pontos</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>1</td>
-								<td>Real Madrid</td>
-								<td>78</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
+		<div class="modal-content">
+			<span class="close" id="closeModalButton">&times;</span>
+			<h2 id="head-busca"></h2>
+			<div id="tabelas"></div>
 		</div>
 	</div>
-	<script>
-		function openModal(){
-			const openModalButton = document.getElementById('openModalButton');
-			const closeModalButton = document.getElementById('closeModalButton');
-			const modal = document.getElementById('ligaModal');
-	
-			let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
-			let storedPeriodo = document.getElementById('periodo').value
-			let storedCampeonato = document.getElementById('campeonato').value
-	
-			document.getElementById('head-busca').innerHTML = `
-					Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
-	
-			document.getElementById('leagueId').innerHTML = storedMercado
-	
-			modal.style.display = 'block';
-	
-			// Fechar o modal ao clicar no "X"
-			closeModalButton.addEventListener('click', () => {
+
+<script>
+	function openModal(){
+		const openModalButton = document.getElementById('openModalButton');
+		const closeModalButton = document.getElementById('closeModalButton');
+		const modal = document.getElementById('ligaModal');
+
+		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
+		let storedPeriodo = document.getElementById('periodo').value
+		let storedCampeonato = document.getElementById('campeonato').selectedOptions[0].textContent
+
+		fetch(`/kirongames/auto-search/${storedMercado.replace(' ','_')}`)
+		.then((response) => response.json())
+		.then((data) => {
+			document.getElementById('tabelas').innerHTML =
+				`<h4> ${storedCampeonato} <h4>` + 
+				generateTable(data)})
+
+		document.getElementById('head-busca').innerHTML = `
+				Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
+
+		//document.getElementById('leagueId').innerHTML = storedMercado
+
+		modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+		
+		// Fechar o modal ao clicar no "X"
+		closeModalButton.addEventListener('click', () => {
+			modal.style.display = 'none';
+			document.body.style.overflow = 'auto';
+		});
+
+		// Fechar o modal ao clicar fora da caixa do modal
+		window.addEventListener('click', (event) => {
+			if (event.target === modal) {
 				modal.style.display = 'none';
-			});
-	
-			// Fechar o modal ao clicar fora da caixa do modal
-			window.addEventListener('click', (event) => {
-				if (event.target === modal) {
-					modal.style.display = 'none';
-				}
-			});
+				document.body.style.overflow = 'auto';
+			}
+		});
+	}
+
+	function generateTable(data){
+		console.log(data);
+		let table = `<table border="1" class="table"><thead>
+										<tr>
+											<th class="centered">Placar</th>
+											<th class="centered">S/Gale</th>
+											<th class="centered">1º Gale</th>
+											<th class="centered">2º Gale</th>
+											<th class="centered">Red</th>
+											<th class="centered">Green</th>
+											<th class="centered">%</th>
+										</tr>
+								</thead><tbody>`
+
+		for (let i in data.placar) {
+			table += `
+				<tr>
+					<td class="centered">${data["placar"][i]}</td>
+					<td class="centered">${data["tiro seco"][i]}</td>
+					<td class="centered">${data["primeiro gale"][i]}</td>
+					<td class="centered">${data["segundo gale"][i]}</td>
+					<td class="centered">${data["red"][i]}</td>
+					<td class="centered">${data["green"][i]}</td>
+					<td class="centered">${data["assertividade"][i]}%</td>
+			</tr>
+			`
 		}
-	</script>
+
+		table += `</tbody></table>`;
+
+		return table;
+	}
+</script>
 	
 	<style>
 		/* Estilos do modal */
@@ -410,13 +394,16 @@
 	}
 	
 	/* Conteúdo do modal */
-	/*.modal-content {
-		background-color: #fefefe;
+	.modal-content {
+		background-color: rgba(0, 0, 0, 0.8);
 		margin: 15% auto;
 		padding: 20px;
 		border: 1px solid #888;
-		width: 80%; /* Ajuste conforme necessário */
+		width: 80%; 
+		color: aqua;
 	}
+
+	
 	
 	/* Botão de fechar (X) */
 	.close {
@@ -431,7 +418,7 @@
 		color: black;
 		text-decoration: none;
 		cursor: pointer;
-	}*/
-	
-	</style>
+}
+
+</style>
 {% endblock %}

@@ -6,6 +6,8 @@ from datetime import datetime
 import re
 import pandas as pd
 
+from painel.extensions import csrf
+
 kirongames = Blueprint('kirongames', __name__, template_folder='templates', url_prefix='/kirongames')
 
 @kirongames.before_request
@@ -22,8 +24,8 @@ def get_api_data(liga, periodo):
         'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'
     }
 
-    #response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
-    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?liga={liga}&futuro=true&Horas=Horas{periodo}&tipoOdd=&dadosAlteracao=&filtros=&confrontos=false&hrsConfrontos=240', headers=header)
+    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+    #response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?liga={liga}&futuro=true&Horas=Horas{periodo}&tipoOdd=&dadosAlteracao=&filtros=&confrontos=false&hrsConfrontos=240', headers=header)
     return response
 
 def process_games_data(games_data):
@@ -152,7 +154,6 @@ def organize_games_details_by_teams(games_data, teamA, teamB):
     # Dicionários para armazenar os jogos
     games_teamA_home = defaultdict(list)  # Jogos com teamA como mandante contra teamB
     all_head_to_head_games = defaultdict(list)  # Todos os jogos entre teamA e teamB
-    print(games_data, teamA, teamB)
     # Percorre todos os jogos fornecidos
     for game in games_data:
         # Extrai informações relevantes do jogo
@@ -210,8 +211,8 @@ def limit_last_games(games_by_team):
 
 @kirongames.route('/')
 def index():
-    mercado = request.args.get('mercado', 'over2_5')  # valor padrão se o parâmetro não for passado
-    periodo = ( request.args.get('periodo', 24))  # valor padrão de 12
+    mercado = request.args.get('mercado', 'over_2.5')  # valor padrão se o parâmetro não for passado
+    periodo = request.args.get('periodo', 12) # valor padrão de 12
     liga = request.args.get('campeonato', '1')
     
     # header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'}
@@ -253,23 +254,42 @@ def index():
 
     return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
 
-@kirongames.route('/auto-search/<mercado>', methods=['GET'])
-def auto_search(mercado):
+@kirongames.route('/auto-search', methods=['POST'])
+@csrf.exempt
+def auto_search():
     periodo = request.args.get('periodo', 12)
     liga = request.args.get('campeonato', '1')
     
-    mercado_name = mercado.split('_')[0]
-    mercado = float(mercado.split('_')[1])
-    operator = ''
-    print(mercado_name)
-    if mercado_name == 'Over':
-        operator = '>' 
-    elif mercado_name == 'Under':
-        operator = '<'
+    data = request.json
     
+    over = data.get('over')
+    under = data.get('under')
+    par = data.get('par')
+    impar = data.get('impar')
+    ambas_sim = data.get('ambas_sim')
+    ambas_nao = data.get('ambas_nao')
+    
+    if over:
+        operator = '>' 
+        mercado = over
+    elif under:
+        operator = '<'
+        mercado = under
+    elif par:
+        operator = '% 2 =='
+        mercado = 0
+    elif impar:
+        operator = '% 2 !='
+        mercado = 0
+    elif ambas_sim:
+        operator = '>'
+        mercado = 0
+    elif ambas_nao:
+        operator = '<'
+        mercado = 0
+        
     try:
         response = get_api_data(liga, periodo)
-        print(response)
         if response.status_code == 200:
             games_data = response.json()
             df = create_dataframe(games_data)
@@ -286,29 +306,38 @@ def auto_search(mercado):
                     coluna_pos = df.columns.get_loc(minuto)
                     try:
                         coluna_0 = linha_acima[minuto]
-                        soma_coluna_0 = sum(map(int, coluna_0.split("-")))
-                        coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
+                        score_1, score_2 = map(int, coluna_0.split("-"))
+                        soma_coluna_0 = score_1 + score_2
+                        if not ambas_nao:
+                            coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
+                        else:
+                            coluna_0 = f'{score_1} == 0 or {score_2} == 0'
                     except:
                         coluna_0 = "Não há"
                         soma_coluna_0 = 0
                         coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
                     try:
                         coluna_1 = linha_acima[df.columns[coluna_pos + 1]]
-                        soma_coluna_1 = sum(map(int, coluna_1.split("-")))
-                        coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
+                        score_1, score_2 = map(int, coluna_1.split("-"))
+                        if not ambas_nao:
+                            coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
+                        else:
+                            coluna_1 = f'{score_1} == 0 or {score_2} == 0'
                     except:
                         coluna_1 = "Não há"
                         soma_coluna_1 = 0
                         coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
                     try:
                         coluna_2 = linha_acima[df.columns[coluna_pos + 2]]
-                        soma_coluna_2 = sum(map(int, coluna_2.split("-")))
-                        coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
+                        score_1, score_2 = map(int, coluna_2.split("-"))
+                        if not ambas_nao:
+                            coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
+                        else:
+                            coluna_2 = f'{score_1} == 0 or {score_2} == 0'
                     except:
                         coluna_2 = "Não há"
                         soma_coluna_2 = 0
                         coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
-
                     if (eval(coluna_0)):
                         json_row = {
                             "placar": f"{linha_atual[minuto]}",
@@ -389,7 +418,6 @@ def auto_search(mercado):
 
             # Exibindo o Datarame final
             response = df_consolidado.to_json()
-            print(response)
             return response
         
     except requests.exceptions.RequestException as e:
@@ -430,7 +458,6 @@ def get_game_details(team_a, team_b):
         response = get_api_data(liga, periodo)
         response_details = requests.get(f'http://62.171.162.25:5000/api/partidas/{team_a}/{team_b}/500')  
         
-        print(response_details.json())      
         # response_details = get_api_data(liga, 240)        
 
         if response.status_code == 200:
@@ -496,10 +523,11 @@ def get_games():
 def create_dataframe(games_data):
     # Inicializar uma lista para construir a tabela
     tabela = []
-
+    
     # Estruturar os dados para criar a tabela
     for linha in games_data['Linhas']:
-        hora = linha['Hora']
+        hora = linha.get('Hora', '00')
+        # hora = linha['Hora']
         linha_dict = {"Hora": hora}  # Começa com a hora como referência
 
         for coluna in linha['Colunas']:

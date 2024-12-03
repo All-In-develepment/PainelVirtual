@@ -313,10 +313,10 @@ def auto_search():
     
     if over:
         operator = '>' 
-        mercado = over
+        mercado = float(over)
     elif under:
         operator = '<'
-        mercado = under
+        mercado = float(under)
     elif par:
         operator = '% 2 =='
         mercado = 0
@@ -338,7 +338,7 @@ def auto_search():
     elif draw_ht:
         operator = '=='
         mercado = 0
-        
+    print(data, operator, mercado)
     try:
         response = get_api_data(liga, periodo)
         if response.status_code == 200:
@@ -385,6 +385,7 @@ def auto_search():
                         score_1, score_2 = map(int, coluna_1.split("-"))
                         score_1_ht, score_2_ht = map(int, coluna_1_ht.split("-"))
                         
+                        soma_coluna_1 = score_1 + score_2
                         if home_win or away_win:
                             coluna_1 = f'{score_1} {operator} {score_2}'
                         elif ambas_nao or ambas_sim:
@@ -402,7 +403,8 @@ def auto_search():
                         coluna_2_ht = linha_acima_ht[df.columns[coluna_pos_ht + 2]]
                         score_1, score_2 = map(int, coluna_2.split("-"))
                         score_1_ht, score_2_ht = map(int, coluna_2_ht.split("-"))
-
+                        
+                        soma_coluna_2 = score_1 + score_2
                         if home_win or away_win:
                             coluna_2 = f'{score_1} {operator} {score_2}'
                         elif ambas_nao or ambas_sim:

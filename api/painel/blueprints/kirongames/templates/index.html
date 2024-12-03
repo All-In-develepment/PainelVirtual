@@ -121,7 +121,9 @@
 																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
 																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }} <br>
-																								{{ coluna['ProcessedOdds']['u15'] }}
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u15'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
@@ -491,6 +493,19 @@
 				assertividade: data["assertividade"][key]
 		}));
 }
+
+function toggleTableContent() {
+	// Get the state of the checkbox
+	const isChecked = document.getElementById("mostrarOdds").checked;
+
+	// Find all elements with the class "odds"
+	const oddsElements = document.querySelectorAll(".odds");
+
+	// Toggle the display of the odds based on the checkbox state
+	oddsElements.forEach((element) => {
+			element.style.display = isChecked ? "inline" : "none";
+	});
+}
 </script>
 	
 	<style>
@@ -530,6 +545,9 @@
 		text-decoration: none;
 		cursor: pointer;
 }
-
+	.odds {
+		font-size: small;
+		display: none;
+	}
 </style>
 {% endblock %}

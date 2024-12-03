@@ -281,7 +281,6 @@ def index():
                         odds_dict[odd_name] = float(odd_value)  # Convertendo o valor para float
 
                     coluna["ProcessedOdds"] = odds_dict
-        print(json_result)
     else:
         json_result = []
         print(resposta.status_code)
@@ -293,8 +292,6 @@ def index():
 def auto_search():
     periodo = 12
     liga = '1'
-    
-    print(periodo)
     
     data = request.json
     
@@ -338,7 +335,6 @@ def auto_search():
     elif draw_ht:
         operator = '=='
         mercado = 0
-    print(data, operator, mercado)
     try:
         response = get_api_data(liga, periodo)
         if response.status_code == 200:

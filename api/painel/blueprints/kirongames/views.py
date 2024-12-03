@@ -24,7 +24,7 @@ def get_api_data(liga, periodo):
         'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'
     }
 
-    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=ftc,fte,ftv,ambs,ambn,o15,o25,o35,u15,u25,u35,ft10,ft20,ft21,ft30,ft31,ft32,ft40,ft41,ft42,ht01,htc,hte,htv', headers=header)
     #response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?liga={liga}&futuro=true&Horas=Horas{periodo}&tipoOdd=&dadosAlteracao=&filtros=&confrontos=false&hrsConfrontos=240', headers=header)
     return response
 
@@ -214,9 +214,7 @@ def index():
     mercado = request.args.get('mercado', 'over_2.5')  # valor padrão se o parâmetro não for passado
     periodo = request.args.get('periodo', 12) # valor padrão de 12
     liga = request.args.get('campeonato', '1')
-    
-    # header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'}
-    # resposta =  requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+
     resposta =  get_api_data(liga, periodo)
     if resposta.status_code == 200:
         json_result = resposta.json()
@@ -225,6 +223,7 @@ def index():
                 if 'Resultado' in coluna:
                     soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
                     coluna['SomaGols'] = soma_gols
+                    odds = coluna.get('Odds')
                     
                     home_ht, away_ht = coluna['Resultado_HT'].split('-')
                     
@@ -269,6 +268,19 @@ def index():
                         coluna['draw_ht'] = True
                     else:
                         coluna['draw_ht'] = False
+                        
+                    odds_dict = {}    
+                    if not odds:  # Ignorar None ou strings vazias
+                        continue
+                    
+                    for odd in odds.split(";"):
+                        if not odd:  # Ignorar strings vazias resultantes do split
+                            continue
+  
+                        odd_name, odd_value = odd.split("@")
+                        odds_dict[odd_name] = float(odd_value)  # Convertendo o valor para float
+
+                    coluna["ProcessedOdds"] = odds_dict
     else:
         json_result = []
         print(resposta.status_code)
@@ -278,10 +290,13 @@ def index():
 @kirongames.route('/auto-search', methods=['POST'])
 @csrf.exempt
 def auto_search():
-    periodo = request.args.get('periodo', 12)
-    liga = request.args.get('campeonato', '1')
+    periodo = 12
+    liga = '1'
     
     data = request.json
+    
+    periodo = data['periodo']
+    liga = data['liga']
     
     over = data.get('over')
     under = data.get('under')
@@ -295,10 +310,10 @@ def auto_search():
     
     if over:
         operator = '>' 
-        mercado = over
+        mercado = float(over)
     elif under:
         operator = '<'
-        mercado = under
+        mercado = float(under)
     elif par:
         operator = '% 2 =='
         mercado = 0
@@ -320,7 +335,6 @@ def auto_search():
     elif draw_ht:
         operator = '=='
         mercado = 0
-        
     try:
         response = get_api_data(liga, periodo)
         if response.status_code == 200:
@@ -367,6 +381,7 @@ def auto_search():
                         score_1, score_2 = map(int, coluna_1.split("-"))
                         score_1_ht, score_2_ht = map(int, coluna_1_ht.split("-"))
                         
+                        soma_coluna_1 = score_1 + score_2
                         if home_win or away_win:
                             coluna_1 = f'{score_1} {operator} {score_2}'
                         elif ambas_nao or ambas_sim:
@@ -384,7 +399,8 @@ def auto_search():
                         coluna_2_ht = linha_acima_ht[df.columns[coluna_pos_ht + 2]]
                         score_1, score_2 = map(int, coluna_2.split("-"))
                         score_1_ht, score_2_ht = map(int, coluna_2_ht.split("-"))
-
+                        
+                        soma_coluna_2 = score_1 + score_2
                         if home_win or away_win:
                             coluna_2 = f'{score_1} {operator} {score_2}'
                         elif ambas_nao or ambas_sim:
@@ -447,6 +463,8 @@ def auto_search():
 
             # Iterando sobre os placares únicos
             for placar in df_resultados["placar"].unique():
+                if 'rony' in placar:
+                    continue
                 # Contando os tiros para o placar
                 tiros = tiro_contagem.loc[placar] if placar in tiro_contagem.index else pd.Series()
                 
@@ -593,8 +611,8 @@ def create_dataframe(games_data):
 
         for coluna in linha['Colunas']:
             minuto = coluna.get("Minuto")  # Extrai o minuto
-            resultado = coluna.get("Resultado", "-")  # Extrai o resultado ou usa "-"
-            resultado_ht = coluna.get("Resultado_HT", "-")  # Extrai o resultado ou usa "-"
+            resultado = coluna.get("Resultado", 'rony')  # Extrai o resultado ou usa "-"
+            resultado_ht = coluna.get("Resultado_HT", 'rony')  # Extrai o resultado ou usa "-"
             
             if minuto:
                 linha_dict[minuto] = resultado  # Adiciona o resultado no minuto correspondente

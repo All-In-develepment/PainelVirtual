@@ -70,9 +70,17 @@
 					</div>
 				</div>
 			</div>
+			<div>
+				<div>
+
+					<div class="checkbox-container">
+						<input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()">
+						<label for="mostrarOdds">Mostrar odds</label>
+					</div>
+
 			<div style="text-align: right;">
 				<button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
-					Dectar Padrões
+					Detectar Padrões
 				</button>
 			</div>
 			
@@ -102,6 +110,7 @@
 																				{% if coluna['SomaGolsUnder0_5'] < 0.5 %}
 																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
+																								
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
@@ -111,31 +120,49 @@
 																		{% elif mercado == 'under_1.5' %}
 																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u15'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u15'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'under_2.5' %}
 																				{% if coluna['SomaGolsUnder2_5'] < 2.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u25'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u25'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'under_3.5' %}
 																				{% if coluna['SomaGolsUnder3_5'] < 3.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u35'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['u35'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% endif %}
@@ -143,7 +170,7 @@
 																		{% if mercado == 'over_0.5' %}
 																				{% if coluna['SomaGols'] > 0.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} 
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
@@ -153,31 +180,49 @@
 																		{% elif mercado == 'over_1.5' %}
 																				{% if coluna['SomaGols'] > 1.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o15'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o15'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'over_2.5' %}
 																				{% if coluna['SomaGols'] > 2.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o25'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o25'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'over_3.5' %}
 																				{% if coluna['SomaGols'] > 3.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o35'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['o35'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% endif %}
@@ -185,21 +230,33 @@
 																		{% if mercado == 'ambas_marcam_sim' %}
 																				{% if coluna['AmbasMarcam'] %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['ambs'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['ambs'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'ambas_marcam_nao' %}
 																				{% if coluna['AmbasMarcamNao'] %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['ambn'] }}
+																								</span>
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								<span class="odds">
+																									odd: {{ coluna['ProcessedOdds']['ambn'] }}
+																								</span>
 																						</td>
 																				{% endif %}
 																		{% endif %}
@@ -226,31 +283,49 @@
 																{% elif mercado == 'home_win' %}
 																		{% if coluna['home_win'] == True %}
 																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['ftc'] }}
+																						</span>
 																				</td>
 																		{% else %}
 																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['ftc'] }}
+																						</span>
 																				</td>
 																		{% endif %}
 																{% elif mercado == 'away_win' %}
 																		{% if coluna['away_win'] == True %}
 																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['ftv'] }}
+																						</span>
 																				</td>
 																		{% else %}
 																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['ftv'] }}
+																						</span>
 																				</td>
 																		{% endif %}
 																{% elif mercado == 'draw_ht' %}
 																		{% if coluna['draw_ht'] == True %}
 																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['hte'] }}
+																						</span>
 																				</td>
 																		{% else %}
 																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }}
+																						{{ coluna['Resultado'] }} <br>
+																						<span class="odds">
+																							odd: {{ coluna['ProcessedOdds']['hte'] }}
+																						</span>
 																				</td>
 																		{% endif %}
 																{% endif %}
@@ -361,6 +436,8 @@
 		let storedCampeonato = localStorage.getItem('campeonato');
 
 		const data = {
+			"periodo": storedPeriodo,
+			"liga": storedCampeonato,
 			"over": storedMercadoChoice.includes("over")? 
 																storedMercadoChoice.split("_")[1] : null,
 			"under": storedMercadoChoice.includes("under") ? 
@@ -479,6 +556,19 @@
 				assertividade: data["assertividade"][key]
 		}));
 }
+
+function toggleTableContent() {
+	// Get the state of the checkbox
+	const isChecked = document.getElementById("mostrarOdds").checked;
+
+	// Find all elements with the class "odds"
+	const oddsElements = document.querySelectorAll(".odds");
+
+	// Toggle the display of the odds based on the checkbox state
+	oddsElements.forEach((element) => {
+			element.style.display = isChecked ? "inline" : "none";
+	});
+}
 </script>
 	
 	<style>
@@ -518,6 +608,9 @@
 		text-decoration: none;
 		cursor: pointer;
 }
-
+	.odds {
+		font-size: small;
+		display: none;
+	}
 </style>
 {% endblock %}

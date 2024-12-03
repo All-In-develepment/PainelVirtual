@@ -70,9 +70,17 @@
 					</div>
 				</div>
 			</div>
+			<div>
+				<div>
+
+					<div class="checkbox-container">
+						<input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()">
+						<label for="mostrarOdds">Mostrar odds</label>
+					</div>
+
 			<div style="text-align: right;">
 				<button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
-					Dectar Padrões
+					Detectar Padrões
 				</button>
 			</div>
 			
@@ -102,6 +110,7 @@
 																				{% if coluna['SomaGolsUnder0_5'] < 0.5 %}
 																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
+																								
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">
@@ -111,7 +120,8 @@
 																		{% elif mercado == 'under_1.5' %}
 																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
 																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
+																								{{ coluna['Resultado'] }} <br>
+																								{{ coluna['ProcessedOdds']['u15'] }}
 																						</td>
 																				{% else %}
 																						<td style="text-align: center" class="bg-danger">

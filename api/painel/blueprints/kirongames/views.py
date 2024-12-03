@@ -24,7 +24,7 @@ def get_api_data(liga, periodo):
         'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'
     }
 
-    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+    response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=ftc,fte,ftv,ambs,ambn,o15,o25,o35,u15,u25,u35,ft10,ft20,ft21,ft30,ft31,ft32,ft40,ft41,ft42,ht01,htc,hte,htv', headers=header)
     #response = requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?liga={liga}&futuro=true&Horas=Horas{periodo}&tipoOdd=&dadosAlteracao=&filtros=&confrontos=false&hrsConfrontos=240', headers=header)
     return response
 
@@ -214,9 +214,7 @@ def index():
     mercado = request.args.get('mercado', 'over_2.5')  # valor padrão se o parâmetro não for passado
     periodo = request.args.get('periodo', 12) # valor padrão de 12
     liga = request.args.get('campeonato', '1')
-    
-    # header = {'Content-Type': 'application/json', 'Accept': 'application/json', 'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IlJvbmFsZG8gRXN0cmVsYSIsIklkIjoiMTYxNDMwIiwiQXRpdm8iOiJTIiwiRW1haWwiOiJyb25hbGRvZXN0cmVsYUB5YWhvby5jb20uYnIiLCJOb21lIjoiUm9uYWxkbyBFc3RyZWxhIiwiRGF0YUV4cGlyYWNhbyI6IjIwMjUtMTEtMTkgMTA6NDE6MjQiLCJEYXRhRXhwaXJhY2FvVG9rZW4iOiIyMDI0LTEyLTE5IDEzOjQxOjI2IiwiSVAiOiIxODkuNTkuMTc1LjEyNSIsIkd1aWQiOiI5OTIxMGE0MC0zMGFlLTQ2MjItOTM5MS1mOTNjOTgyZWNhZDIiLCJEYXRhRXhwaXJhY2FvQm90IjoiIiwibmJmIjoxNzMyMDIzNjg2LCJleHAiOjE3MzQ2MTU2ODYsImlhdCI6MTczMjAyMzY4NiwiaXNzIjoic2VsZiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTc3MzEvIn0.NTG7nBniKFYvBo1vJ4OqnpTcp80jZoMrrJeweBv38Ok'}
-    # resposta =  requests.get(f'https://bet365botwebapi20231115194435.azurewebsites.net/api/PlayPixFutebolVirtual?Liga={liga}&Horas=Horas{periodo}&filtros=', headers=header)
+
     resposta =  get_api_data(liga, periodo)
     if resposta.status_code == 200:
         json_result = resposta.json()
@@ -225,6 +223,7 @@ def index():
                 if 'Resultado' in coluna:
                     soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
                     coluna['SomaGols'] = soma_gols
+                    odds = coluna.get('Odds')
                     
                     home_ht, away_ht = coluna['Resultado_HT'].split('-')
                     
@@ -269,6 +268,20 @@ def index():
                         coluna['draw_ht'] = True
                     else:
                         coluna['draw_ht'] = False
+                        
+                    odds_dict = {}    
+                    if not odds:  # Ignorar None ou strings vazias
+                        continue
+                    
+                    for odd in odds.split(";"):
+                        if not odd:  # Ignorar strings vazias resultantes do split
+                            continue
+  
+                        odd_name, odd_value = odd.split("@")
+                        odds_dict[odd_name] = float(odd_value)  # Convertendo o valor para float
+
+                    coluna["ProcessedOdds"] = odds_dict
+        print(json_result)
     else:
         json_result = []
         print(resposta.status_code)

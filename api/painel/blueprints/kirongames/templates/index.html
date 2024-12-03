@@ -361,6 +361,8 @@
 		let storedCampeonato = localStorage.getItem('campeonato');
 
 		const data = {
+			"periodo": storedPeriodo,
+			"liga": storedCampeonato,
 			"over": storedMercadoChoice.includes("over")? 
 																storedMercadoChoice.split("_")[1] : null,
 			"under": storedMercadoChoice.includes("under") ? 

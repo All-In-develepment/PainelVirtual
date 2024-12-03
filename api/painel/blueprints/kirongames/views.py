@@ -278,10 +278,15 @@ def index():
 @kirongames.route('/auto-search', methods=['POST'])
 @csrf.exempt
 def auto_search():
-    periodo = request.args.get('periodo', 12)
-    liga = request.args.get('campeonato', '1')
+    periodo = 12
+    liga = '1'
+    
+    print(periodo)
     
     data = request.json
+    
+    periodo = data['periodo']
+    liga = data['liga']
     
     over = data.get('over')
     under = data.get('under')

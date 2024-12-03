@@ -452,6 +452,8 @@ def auto_search():
 
             # Iterando sobre os placares únicos
             for placar in df_resultados["placar"].unique():
+                if 'rony' in placar:
+                    continue
                 # Contando os tiros para o placar
                 tiros = tiro_contagem.loc[placar] if placar in tiro_contagem.index else pd.Series()
                 
@@ -598,8 +600,8 @@ def create_dataframe(games_data):
 
         for coluna in linha['Colunas']:
             minuto = coluna.get("Minuto")  # Extrai o minuto
-            resultado = coluna.get("Resultado", "-")  # Extrai o resultado ou usa "-"
-            resultado_ht = coluna.get("Resultado_HT", "-")  # Extrai o resultado ou usa "-"
+            resultado = coluna.get("Resultado", 'rony')  # Extrai o resultado ou usa "-"
+            resultado_ht = coluna.get("Resultado_HT", 'rony')  # Extrai o resultado ou usa "-"
             
             if minuto:
                 linha_dict[minuto] = resultado  # Adiciona o resultado no minuto correspondente

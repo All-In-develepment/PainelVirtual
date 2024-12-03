@@ -28,16 +28,16 @@
 							<label for="mercado">Mercado:</label>
 							<select id="mercado" name="mercado" onchange="updateParams()" class="form-select">
 								<optgroup label="Over" style="font-weight: bold;">
-									<option value="over0_5">Over 0.5</option>
-									<option value="over1_5">Over 1.5</option>
-									<option value="over2_5" selected>Over 2.5</option>
-									<option value="over3_5">Over 3.5</option>
+									<option value="over_0.5">Over 0.5</option>
+									<option value="over_1.5">Over 1.5</option>
+									<option value="over_2.5" selected>Over 2.5</option>
+									<option value="over_3.5">Over 3.5</option>
 								</optgroup>
 								<optgroup label="Under" style="font-weight: bold;">
-									<option value="under0_5">Under 0.5</option>
-									<option value="under1_5">Under 1.5</option>
-									<option value="under2_5">Under 2.5</option>
-									<option value="under3_5">Under 3.5</option>
+									<option value="under_0.5">Under 0.5</option>
+									<option value="under_1.5">Under 1.5</option>
+									<option value="under_2.5">Under 2.5</option>
+									<option value="under_3.5">Under 3.5</option>
 								</optgroup>
 								<optgroup label="Ambas Marcam" style="font-weight: bold;">
 									<option value="ambas_marcam_sim">Ambas Marcam: Sim</option>
@@ -99,7 +99,7 @@
 													{% for coluna in linha['Colunas'] %}
 														{% if 'SomaGols' in coluna %}
 																{% if mercado.startswith('under') %}
-																		{% if mercado == 'under0_5' %}
+																		{% if mercado == 'under_0.5' %}
 																				{% if coluna['SomaGolsUnder0_5'] < 0.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -109,7 +109,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'under1_5' %}
+																		{% elif mercado == 'under_1.5' %}
 																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -119,7 +119,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'under2_5' %}
+																		{% elif mercado == 'under_2.5' %}
 																				{% if coluna['SomaGolsUnder2_5'] < 2.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -129,7 +129,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'under3_5' %}
+																		{% elif mercado == 'under_3.5' %}
 																				{% if coluna['SomaGolsUnder3_5'] < 3.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -141,7 +141,7 @@
 																				{% endif %}
 																		{% endif %}
 																{% elif mercado.startswith('over') %}
-																		{% if mercado == 'over0_5' %}
+																		{% if mercado == 'over_0.5' %}
 																				{% if coluna['SomaGols'] > 0.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -151,7 +151,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'over1_5' %}
+																		{% elif mercado == 'over_1.5' %}
 																				{% if coluna['SomaGols'] > 1.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -161,7 +161,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'over2_5' %}
+																		{% elif mercado == 'over_2.5' %}
 																				{% if coluna['SomaGols'] > 2.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -171,7 +171,7 @@
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
-																		{% elif mercado == 'over3_5' %}
+																		{% elif mercado == 'over_3.5' %}
 																				{% if coluna['SomaGols'] > 3.5 %}
 																						<td style="text-align: center" class="bg-success">  
 																								{{ coluna['Resultado'] }}
@@ -284,6 +284,7 @@
 					.then(html => {
 						document.body.innerHTML = html;
 
+
 						// Restaura os valores selecionados após a atualização do HTML
 						document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over2_5';
 						document.getElementById('periodo').value = localStorage.getItem('periodo') || '24';
@@ -380,9 +381,7 @@
     });
 }
 
-
 	function generateTable(data){
-		console.log(data);
 		let table = `<table border="1" class="table"><thead>
 										<tr>
 											<th class="centered">Placar</th>
@@ -395,24 +394,39 @@
 										</tr>
 								</thead><tbody>`
 
-		for (let i in data.placar) {
+		let tableData = jsonToArray(data);
+		tableData.sort((a, b) => b.assertividade - a.assertividade); 
+		
+		tableData.forEach(row => {
 			table += `
-				<tr>
-					<td class="centered">${data["placar"][i]}</td>
-					<td class="centered">${data["tiro seco"][i]}</td>
-					<td class="centered">${data["primeiro gale"][i]}</td>
-					<td class="centered">${data["segundo gale"][i]}</td>
-					<td class="centered">${data["red"][i]}</td>
-					<td class="centered">${data["green"][i]}</td>
-					<td class="centered">${data["assertividade"][i]}%</td>
-			</tr>
-			`
-		}
+					<tr>
+							<td class="centered">${row.placar}</td>
+							<td class="centered">${row["tiro seco"]}</td>
+							<td class="centered">${row["primeiro gale"]}</td>
+							<td class="centered">${row["segundo gale"]}</td>
+							<td class="centered">${row.red}</td>
+							<td class="centered">${row.green}</td>
+							<td class="centered">${row.assertividade}%</td>
+					</tr>
+			`;
+	});
 
 		table += `</tbody></table>`;
 
 		return table;
 	}
+
+	function jsonToArray(data) {
+		return Object.keys(data.placar).map(key => ({
+				placar: data.placar[key],
+				"tiro seco": data["tiro seco"][key],
+				"primeiro gale": data["primeiro gale"][key],
+				"segundo gale": data["segundo gale"][key],
+				red: data["red"][key],
+				green: data["green"][key],
+				assertividade: data["assertividade"][key]
+		}));
+}
 </script>
 	
 	<style>

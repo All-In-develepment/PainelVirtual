@@ -48,13 +48,30 @@
         </div>
       </div>
     </div>
-    <div style="display: flex; justify-content: space-between;">
-      <div id="team-a-details" style="width: 45%;"></div>
-      <div id="team-a-home-details" style="width: 45%;"></div>
+
+    <div class="row">
+      <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div id="team-a-details" class="table-responsive col-12"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div id="team-a-home-details" class="table-responsive col-12"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div style="display: flex; justify-content: space-between;">
-      <div id="team-b-details" style="width: 45%;"></div>
-      <div id="team-b-home-details" style="width: 45%;"></div>
+
+    <div class="row">
+      <div class="col-lg-6 grid-margin stretch-card">
+      <div style="display: flex; justify-content: space-between;">
+        <div id="team-b-details" style="width: 45%;"></div>
+        <div id="team-b-home-details" style="width: 45%;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -84,7 +101,7 @@ function loadGamesByLeague(leagueId) {
         let firstGame = team[0];
 
         buttonsHtml += `
-          <button class="btn btn-info" onclick="showGameDetails('${firstGame.TeamA}', '${firstGame.TeamB}', '${firstGame.Horario}')">
+          <button class="btn btn-inverse-secondary btn-fw" onclick="showGameDetails('${firstGame.TeamA}', '${firstGame.TeamB}', '${firstGame.Horario}')">
             ${firstGame.Horario} <br>
             ${firstGame.TeamA} vs ${firstGame.TeamB} 
           </button>
@@ -307,14 +324,14 @@ function generateOversTable(teams_details, teamA, teamB) {
 
 function generateTable(teamData) {
   let table = `<table border="1" class="table"><thead>
-                 <tr>
-                   <th class="centered">Horário</th>
-                   <th class="centered">Time A</th>
-                   <th class="centered">Resultado</th>
-                   <th class="centered">Time B</th>
-                   <th class="centered">Status</th>
-                 </tr>
-               </thead><tbody>`;
+                <tr>
+                  <th class="centered">Horário</th>
+                  <th class="centered">Time A</th>
+                  <th class="centered">Resultado</th>
+                  <th class="centered">Time B</th>
+                  <th class="centered">Status</th>
+                </tr>
+              </thead><tbody>`;
   
   teamData.forEach(game => {
       let statusLabel = '';

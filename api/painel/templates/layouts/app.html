@@ -25,12 +25,12 @@
       </button>
       <ul class="navbar-nav w-100">
         <!-- Verify if use is logged and have a subscription -->
-        {% if current_user.is_authenticated and current_user.subscription %}
+        <!--{% if current_user.is_authenticated and current_user.subscription %}
           <li class="nav-item w-100"><a href="{{ url_for('kirongames.index') }}">Horários</a></li>
           <li class="nav-item w-100"><a href="{{ url_for('kirongames.next_games') }}?campeonato=1">Próximo Jogos</a></li>
         {% else %}
         <li class="nav-item w-100"><a href="{{ url_for('billing.pricing') }}">Pricing</a></li>
-        {% endif %}
+        {% endif %}-->
       </ul>
       <ul class="navbar-nav navbar-nav-right">
         {% if current_user.role == 'admin' %}
@@ -73,8 +73,16 @@
             </div>
           </li>
         {% else %}
-          <li><a href="{{ url_for('user.login') }}">Log in</a></li>
-          <li><a href="{{ url_for('user.signup') }}">Sign up</a></li>
+          <li class="nav-item nav-settings d-none d-lg-block">
+            <a href="{{ url_for('user.login') }}" class="nav-link">
+              Log in
+            </a>
+          </li>
+          <li class="nav-item nav-settings d-none d-lg-block">
+            <a href="{{ url_for('user.signup') }}" class="nav-link">
+              Sign up
+            </a>
+          </li>
         {% endif %}
       </ul>
     </div>

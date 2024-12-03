@@ -61,14 +61,14 @@
 						</select>
 					</div>
 
-					<div class="form-group">
+					<!-- <div class="form-group">
 						<label for="campeonato">Campeonato:</label>
 						<select id="campeonato" name="campeonato" onchange="updateParams()" class="form-select">
 							<option value="1">Italiano</option>
 							<option value="2">Inglês</option>
 							<option value="3">Espanhol</option>
 						</select>
-					</div>
+					</div> -->
 				</div>
 			</div>
 			<div style="text-align: right;">
@@ -245,57 +245,75 @@
 		</div>
 	</div>
 	<script>
+			function selectCampeonato(campeonatoId) {
+				// Armazena o campeonato no localStorage
+				localStorage.setItem('campeonato', campeonatoId);
+
+				// Atualiza os parâmetros da URL e recarrega o conteúdo
+				updateParams();
+			}
+
+
+
+
 			function updateParams() {
-			const mercado = document.getElementById('mercado').value;
-			const periodo = document.getElementById('periodo').value;
-			const campeonato = document.getElementById('campeonato').value;
+				const mercado = document.getElementById('mercado').value;
+				const periodo = document.getElementById('periodo').value;
+				const campeonato = localStorage.getItem('campeonato') || '1'; // Pega o valor do campeonato do localStorage
 
-			// Armazenar as seleções no localStorage
-			localStorage.setItem('mercado', mercado);
-			localStorage.setItem('periodo', periodo);
-			localStorage.setItem('campeonato', campeonato);
 
-			const url = new URL(window.location.href);
-			url.searchParams.set('mercado', mercado);
-			url.searchParams.set('periodo', periodo);
-			url.searchParams.set('campeonato', campeonato);
+				// Armazenar as seleções no localStorage
+				localStorage.setItem('mercado', mercado);
+				localStorage.setItem('periodo', periodo);
+				localStorage.setItem('campeonato', campeonato);
 
-			fetch(url)
+				// Atualiza os parâmetros da URL
+				const url = new URL(window.location.href);
+				url.searchParams.set('mercado', mercado);
+				url.searchParams.set('periodo', periodo);
+				url.searchParams.set('campeonato', campeonato);
+
+				// Faz o fetch e atualiza o conteúdo da página
+				fetch(url)
 					.then(response => {
-							if (!response.ok) {
-									throw new Error('Network response was not ok');
-							}
-							return response.text();
+						if (!response.ok) {
+							throw new Error('Network response was not ok');
+						}
+						return response.text();
 					})
 					.then(html => {
-							document.body.innerHTML = html;
+						document.body.innerHTML = html;
 
-							// Restaurar os valores selecionados após a atualização do HTML
-							document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over_2.5';
-							document.getElementById('periodo').value = localStorage.getItem('periodo') || '24';
-							document.getElementById('campeonato').value = localStorage.getItem('campeonato') || '1';
+
+						// Restaura os valores selecionados após a atualização do HTML
+						document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over2_5';
+						document.getElementById('periodo').value = localStorage.getItem('periodo') || '24';
 					})
 					.catch(error => {
-							console.error('There has been a problem with your fetch operation:', error);
+						console.error('There has been a problem with your fetch operation:', error);
 					});
-	}
+			}
+
 
 	// Quando a página é carregada, restaurar as seleções
 	window.onload = function() {
-			const storedMercado = localStorage.getItem('mercado');
-			const storedPeriodo = localStorage.getItem('periodo');
-			const storedCampeonato = localStorage.getItem('campeonato');
+    const storedMercado = localStorage.getItem('mercado');
+    const storedPeriodo = localStorage.getItem('periodo');
+    const storedCampeonato = localStorage.getItem('campeonato');
 
-			if (storedMercado) {
-					document.getElementById('mercado').value = storedMercado;
-			}
-			if (storedPeriodo) {
-					document.getElementById('periodo').value = storedPeriodo;
-			}
-			if (storedCampeonato) {
-					document.getElementById('campeonato').value = storedCampeonato;
-			}
-	};
+    if (storedMercado) {
+        document.getElementById('mercado').value = storedMercado;
+    }
+    if (storedPeriodo) {
+        document.getElementById('periodo').value = storedPeriodo;
+    }
+
+    // Define o campeonato no localStorage caso não exista
+    if (!storedCampeonato) {
+        localStorage.setItem('campeonato', '1'); // Italiano como padrão
+    }
+};
+
 	</script>
 	<!-- MODAL -->
 	<div id="ligaModal" class="modal" style="display: none;">
@@ -307,70 +325,61 @@
 	</div>
 
 <script>
-	function openModal(){
-		const openModalButton = document.getElementById('openModalButton');
-		const closeModalButton = document.getElementById('closeModalButton');
-		const modal = document.getElementById('ligaModal');
+	function openModal() {
+    const openModalButton = document.getElementById('openModalButton');
+    const closeModalButton = document.getElementById('closeModalButton');
+    const modal = document.getElementById('ligaModal');
 
-		const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Obtém os valores do mercado, período e campeonato do localStorage
+    let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent;
+    let storedPeriodo = document.getElementById('periodo').value;
+    let storedCampeonato = localStorage.getItem('campeonato'); // Pega o ID do campeonato armazenado
 
+    // Define o nome do campeonato baseado no ID
+    let campeonatoNome = '';
+    switch (storedCampeonato) {
+        case '1':
+            campeonatoNome = 'Italiano';
+            break;
+        case '2':
+            campeonatoNome = 'Inglês';
+            break;
+        case '3':
+            campeonatoNome = 'Espanhol';
+            break;
+        default:
+            campeonatoNome = 'Desconhecido';
+    }
 
-		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
-		let storedMercadoChoice = document.getElementById('mercado').value
-		let storedPeriodo = document.getElementById('periodo').value
-		let storedCampeonato = document.getElementById('campeonato').selectedOptions[0].textContent
+    // Faz a requisição com os dados corretos
+    fetch(`/kirongames/auto-search/${storedMercado.replace(' ', '_')}`)
+        .then((response) => response.json())
+        .then((data) => {
+            document.getElementById('tabelas').innerHTML =
+                `<h4> ${campeonatoNome} <h4>` + 
+                generateTable(data);
+        });
 
-		const data = {
-			"over": storedMercadoChoice.includes("over")? 
-																storedMercadoChoice.split("_")[1] : null,
-			"under": storedMercadoChoice.includes("under") ? 
-																storedMercadoChoice.split("_")[1] : null,
-			"ambas_sim": storedMercadoChoice.includes("sim") ? 
-																storedMercadoChoice.split("_")[2] : null,
-			"ambas_nao": storedMercadoChoice.includes("nao") ? 
-																storedMercadoChoice.split("_")[2] : null,
-			"par": storedMercadoChoice.includes("par") ? 
-																storedMercadoChoice : null,
-			"impar": storedMercadoChoice.includes("impar") ? 
-																storedMercadoChoice : null,
-		}
+    document.getElementById('head-busca').innerHTML = `
+        Busca Automática - ${storedMercado} - últimas ${storedPeriodo} horas`;
 
-		const test = 'Over 0.5'
-		fetch(`/kirongames/auto-search`, {
-			method: 'POST',
-			headers: {
-					'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(data),
-	})
-		.then((response) => response.json())
-		.then((data) => {
-			document.getElementById('tabelas').innerHTML =
-				`<h4> ${storedCampeonato} <h4>` + 
-				generateTable(data)})
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
 
-		document.getElementById('head-busca').innerHTML = `
-				Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
+    // Fechar o modal ao clicar no "X"
+    closeModalButton.addEventListener('click', () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
 
-		//document.getElementById('leagueId').innerHTML = storedMercado
-
-		modal.style.display = 'block';
-		document.body.style.overflow = 'hidden';
-		
-		// Fechar o modal ao clicar no "X"
-		closeModalButton.addEventListener('click', () => {
-			modal.style.display = 'none';
-			document.body.style.overflow = 'auto';
-		});
-
-		// Fechar o modal ao clicar fora da caixa do modal
-		window.addEventListener('click', (event) => {
-			if (event.target === modal) {
-				modal.style.display = 'none';
-				document.body.style.overflow = 'auto';
-			}
-		});
-	}
+    // Fechar o modal ao clicar fora da caixa do modal
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
 
 	function generateTable(data){
 		let table = `<table border="1" class="table"><thead>

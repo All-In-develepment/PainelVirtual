@@ -225,6 +225,9 @@ def index():
                 if 'Resultado' in coluna:
                     soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
                     coluna['SomaGols'] = soma_gols
+                    
+                    home_ht, away_ht = coluna['Resultado_HT'].split('-')
+                    
                     # Calcule a soma dos gols para os outros mercados
                     coluna['SomaGols1_5'] = soma_gols
                     coluna['SomaGols0_5'] = soma_gols
@@ -242,12 +245,30 @@ def index():
                     coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
                     coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
                     coluna['SomaGols'] = gols_time1 + gols_time2
-
+                    
                     # Adicionando a lógica para Par ou Ímpar
                     if soma_gols % 2 == 0:
                         coluna['ParOuImpar'] = 'Par'
                     else:
                         coluna['ParOuImpar'] = 'Ímpar'
+                        
+                    if gols_time1 > gols_time2:
+                        coluna['home_win'] = True
+                        coluna['away_win'] = False
+                        coluna['draw_ft'] = False
+                    elif gols_time1 < gols_time2:
+                        coluna['home_win'] = False
+                        coluna['away_win'] = True
+                        coluna['draw_ft'] = False
+                    else:
+                        coluna['home_win'] = False
+                        coluna['away_win'] = False
+                        coluna['draw_ft'] = True
+                    
+                    if home_ht == away_ht:
+                        coluna['draw_ht'] = True
+                    else:
+                        coluna['draw_ht'] = False
     else:
         json_result = []
         print(resposta.status_code)
@@ -268,6 +289,9 @@ def auto_search():
     impar = data.get('impar')
     ambas_sim = data.get('ambas_sim')
     ambas_nao = data.get('ambas_nao')
+    home_win = data.get('home_win')
+    away_win = data.get('away_win')
+    draw_ht = data.get('draw_ht')
     
     if over:
         operator = '>' 
@@ -287,53 +311,88 @@ def auto_search():
     elif ambas_nao:
         operator = '<'
         mercado = 0
+    elif home_win:
+        operator = '>'
+        mercado = 0
+    elif away_win:
+        operator = '<'
+        mercado = 0
+    elif draw_ht:
+        operator = '=='
+        mercado = 0
         
     try:
         response = get_api_data(liga, periodo)
         if response.status_code == 200:
             games_data = response.json()
-            df = create_dataframe(games_data)
+            df, df_ht = create_dataframe(games_data)
             
             df_resultados = pd.DataFrame()
+            df_resultados_ht = pd.DataFrame()
             indice_result = 0
             
             for hora_atual, hora_acima in zip(df.index[::-1], df.index[::-1][1:]):
                 linha_atual = df.loc[hora_atual]
                 linha_acima = df.loc[hora_acima]
+                linha_atual_ht = df_ht.loc[hora_atual]
+                linha_acima_ht = df_ht.loc[hora_acima]
                 
                 for minuto in df.columns:
                     valor_acima = linha_acima[minuto]
                     coluna_pos = df.columns.get_loc(minuto)
+                    coluna_pos_ht = df_ht.columns.get_loc(minuto)
                     try:
                         coluna_0 = linha_acima[minuto]
+                        coluna_0_ht = linha_acima_ht[minuto]
                         score_1, score_2 = map(int, coluna_0.split("-"))
+                        score_1_ht, score_2_ht = map(int, coluna_0_ht.split("-"))
+                        
                         soma_coluna_0 = score_1 + score_2
-                        if not ambas_nao:
-                            coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
-                        else:
+                        if home_win or away_win:
+                            coluna_0 = f'{score_1} {operator} {score_2}'
+                        elif ambas_nao or ambas_sim:
                             coluna_0 = f'{score_1} == 0 or {score_2} == 0'
+                        elif draw_ht:
+                            coluna_0 = f'{score_1_ht} {operator} {score_2_ht}'
+                        else:
+                            coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
                     except:
                         coluna_0 = "Não há"
                         soma_coluna_0 = 0
                         coluna_0 = f'{soma_coluna_0} {operator} {mercado}'
                     try:
                         coluna_1 = linha_acima[df.columns[coluna_pos + 1]]
+                        coluna_1_ht = linha_acima_ht[df.columns[coluna_pos_ht + 1]]
+                        
                         score_1, score_2 = map(int, coluna_1.split("-"))
-                        if not ambas_nao:
-                            coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
-                        else:
+                        score_1_ht, score_2_ht = map(int, coluna_1_ht.split("-"))
+                        
+                        if home_win or away_win:
+                            coluna_1 = f'{score_1} {operator} {score_2}'
+                        elif ambas_nao or ambas_sim:
                             coluna_1 = f'{score_1} == 0 or {score_2} == 0'
+                        elif draw_ht:
+                            coluna_1 = f'{score_1_ht} {operator} {score_2_ht}'
+                        else:
+                            coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
                     except:
                         coluna_1 = "Não há"
                         soma_coluna_1 = 0
                         coluna_1 = f'{soma_coluna_1} {operator} {mercado}'
                     try:
                         coluna_2 = linha_acima[df.columns[coluna_pos + 2]]
+                        coluna_2_ht = linha_acima_ht[df.columns[coluna_pos_ht + 2]]
                         score_1, score_2 = map(int, coluna_2.split("-"))
-                        if not ambas_nao:
-                            coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
-                        else:
+                        score_1_ht, score_2_ht = map(int, coluna_2_ht.split("-"))
+
+                        if home_win or away_win:
+                            coluna_2 = f'{score_1} {operator} {score_2}'
+                        elif ambas_nao or ambas_sim:
                             coluna_2 = f'{score_1} == 0 or {score_2} == 0'
+                        elif draw_ht:
+                            coluna_2 = f'{score_1_ht} {operator} {score_2_ht}'
+                        else:
+                            coluna_2 = f'{soma_coluna_2} {operator} {mercado}'
                     except:
                         coluna_2 = "Não há"
                         soma_coluna_2 = 0
@@ -523,29 +582,39 @@ def get_games():
 def create_dataframe(games_data):
     # Inicializar uma lista para construir a tabela
     tabela = []
+    tabela_ht = []
     
     # Estruturar os dados para criar a tabela
     for linha in games_data['Linhas']:
         hora = linha.get('Hora', '00')
         # hora = linha['Hora']
         linha_dict = {"Hora": hora}  # Começa com a hora como referência
+        linha_dict_ht = {"Hora": hora}  # Começa com a hora como referência
 
         for coluna in linha['Colunas']:
             minuto = coluna.get("Minuto")  # Extrai o minuto
             resultado = coluna.get("Resultado", "-")  # Extrai o resultado ou usa "-"
+            resultado_ht = coluna.get("Resultado_HT", "-")  # Extrai o resultado ou usa "-"
             
             if minuto:
                 linha_dict[minuto] = resultado  # Adiciona o resultado no minuto correspondente
+                
+            if minuto:
+                linha_dict_ht[minuto] = resultado_ht  # Adiciona o resultado no minuto correspondente
 
         tabela.append(linha_dict)  # Adiciona a linha estruturada na tabela
+        tabela_ht.append(linha_dict_ht)  # Adiciona a linha estruturada na tabela
 
     # Criar o DataFrame a partir da tabela
     df = pd.DataFrame(tabela)
+    df_ht = pd.DataFrame(tabela_ht)
 
     # Definir a coluna "Hora" como índice
     df.set_index("Hora", inplace=True)
+    df_ht.set_index("Hora", inplace=True)
 
     # Ordenar as colunas por minuto (caso necessário)
     df = df.sort_index(axis=1)
+    df_ht = df_ht.sort_index(axis=1)
     
-    return df
+    return df, df_ht

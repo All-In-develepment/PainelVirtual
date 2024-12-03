@@ -325,61 +325,88 @@
 	</div>
 
 <script>
-	function openModal() {
-    const openModalButton = document.getElementById('openModalButton');
-    const closeModalButton = document.getElementById('closeModalButton');
-    const modal = document.getElementById('ligaModal');
+	function openModal(){
+		const openModalButton = document.getElementById('openModalButton');
+		const closeModalButton = document.getElementById('closeModalButton');
+		const modal = document.getElementById('ligaModal');
 
-    // Obtém os valores do mercado, período e campeonato do localStorage
-    let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent;
-    let storedPeriodo = document.getElementById('periodo').value;
-    let storedCampeonato = localStorage.getItem('campeonato'); // Pega o ID do campeonato armazenado
+		const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // Define o nome do campeonato baseado no ID
-    let campeonatoNome = '';
-    switch (storedCampeonato) {
-        case '1':
-            campeonatoNome = 'Italiano';
-            break;
-        case '2':
-            campeonatoNome = 'Inglês';
-            break;
-        case '3':
-            campeonatoNome = 'Espanhol';
-            break;
-        default:
-            campeonatoNome = 'Desconhecido';
-    }
 
-    // Faz a requisição com os dados corretos
-    fetch(`/kirongames/auto-search/${storedMercado.replace(' ', '_')}`)
-        .then((response) => response.json())
-        .then((data) => {
-            document.getElementById('tabelas').innerHTML =
-                `<h4> ${campeonatoNome} <h4>` + 
-                generateTable(data);
-        });
+		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
+		let storedMercadoChoice = document.getElementById('mercado').value
+		let storedPeriodo = document.getElementById('periodo').value
+		let storedCampeonato = localStorage.getItem('campeonato');
 
-    document.getElementById('head-busca').innerHTML = `
-        Busca Automática - ${storedMercado} - últimas ${storedPeriodo} horas`;
+		const data = {
+			"over": storedMercadoChoice.includes("over")? 
+																storedMercadoChoice.split("_")[1] : null,
+			"under": storedMercadoChoice.includes("under") ? 
+																storedMercadoChoice.split("_")[1] : null,
+			"ambas_sim": storedMercadoChoice.includes("sim") ? 
+																storedMercadoChoice.split("_")[2] : null,
+			"ambas_nao": storedMercadoChoice.includes("nao") ? 
+																storedMercadoChoice.split("_")[2] : null,
+			"par": storedMercadoChoice.includes("par") ? 
+																storedMercadoChoice : null,
+			"impar": storedMercadoChoice.includes("impar") ? 
+																storedMercadoChoice : null,
+		}
 
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+		// Define o nome do campeonato baseado no ID
+		let campeonatoNome = '';
+		switch (storedCampeonato) {
+				case '1':
+						campeonatoNome = 'Italiano';
+						break;
+				case '2':
+						campeonatoNome = 'Inglês';
+						break;
+				case '3':
+						campeonatoNome = 'Espanhol';
+						break;
+				default:
+						campeonatoNome = 'Desconhecido';
+		}
 
-    // Fechar o modal ao clicar no "X"
-    closeModalButton.addEventListener('click', () => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
+		fetch(`/kirongames/auto-search`, {
+			method: 'POST',
+			headers: {
+					'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			document.getElementById('tabelas').innerHTML =
+				`<h4> ${campeonatoNome} <h4>` + 
+				generateTable(data)})
 
-    // Fechar o modal ao clicar fora da caixa do modal
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    });
-}
+		document.getElementById('head-busca').innerHTML = `
+				Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
+
+		//document.getElementById('leagueId').innerHTML = storedMercado
+
+		modal.style.display = 'block';
+		document.body.style.overflow = 'hidden';
+		
+		// Fechar o modal ao clicar no "X"
+		closeModalButton.addEventListener('click', () => {
+			modal.style.display = 'none';
+			document.body.style.overflow = 'auto';
+		});
+
+		// Fechar o modal ao clicar fora da caixa do modal
+		window.addEventListener('click', (event) => {
+			if (event.target === modal) {
+				modal.style.display = 'none';
+				document.body.style.overflow = 'auto';
+			}
+		});
+	}
+
+	
+	
 
 	function generateTable(data){
 		let table = `<table border="1" class="table"><thead>

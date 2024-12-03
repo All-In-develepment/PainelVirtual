@@ -47,6 +47,13 @@
 									<option value="par">Par</option>
 									<option value="impar">Ímpar</option>
 								</optgroup>
+								<optgroup label="Vencedor">
+									<option value="home_win">Casa Vence</option>
+									<option value="away_win">Fora Vence</option>
+								</optgroup>
+								<optgroup label="HT">
+									<option value="draw_ht">Empate</option>
+								</optgroup>
 							</select>
 						</div>
 					</form>
@@ -58,17 +65,9 @@
 							<option value="6">6 horas</option>
 							<option value="12">12 horas</option>
 							<option value="24" selected>24 horas</option>
+							<option value="48">48 horas</option>
 						</select>
 					</div>
-
-					<!-- <div class="form-group">
-						<label for="campeonato">Campeonato:</label>
-						<select id="campeonato" name="campeonato" onchange="updateParams()" class="form-select">
-							<option value="1">Italiano</option>
-							<option value="2">Inglês</option>
-							<option value="3">Espanhol</option>
-						</select>
-					</div> -->
 				</div>
 			</div>
 			<div style="text-align: right;">
@@ -101,41 +100,41 @@
 																{% if mercado.startswith('under') %}
 																		{% if mercado == 'under_0.5' %}
 																				{% if coluna['SomaGolsUnder0_5'] < 0.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'under_1.5' %}
 																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'under_2.5' %}
 																				{% if coluna['SomaGolsUnder2_5'] < 2.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'under_3.5' %}
 																				{% if coluna['SomaGolsUnder3_5'] < 3.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
@@ -143,84 +142,114 @@
 																{% elif mercado.startswith('over') %}
 																		{% if mercado == 'over_0.5' %}
 																				{% if coluna['SomaGols'] > 0.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'over_1.5' %}
 																				{% if coluna['SomaGols'] > 1.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'over_2.5' %}
 																				{% if coluna['SomaGols'] > 2.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'over_3.5' %}
 																				{% if coluna['SomaGols'] > 3.5 %}
-																						<td style="text-align: center" class="bg-success">  
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% endif %}
-																		{% elif mercado.startswith('ambas_marcam') %}
+																{% elif mercado.startswith('ambas_marcam') %}
 																		{% if mercado == 'ambas_marcam_sim' %}
-																				{% if coluna['AmbasMarcam'] %}  {# Verifica se ambas marcaram #}
-																						<td style="text-align: center" class="bg-success">  
+																				{% if coluna['AmbasMarcam'] %}
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% elif mercado == 'ambas_marcam_nao' %}
-																		{% if coluna['AmbasMarcamNao'] %}  
-																						<td style="text-align: center" class="bg-success">  
+																				{% if coluna['AmbasMarcamNao'] %}
+																						<td style="text-align: center" class="bg-success">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% else %}
-																						<td style="text-align: center" class="bg-danger">  
+																						<td style="text-align: center" class="bg-danger">
 																								{{ coluna['Resultado'] }}
 																						</td>
 																				{% endif %}
 																		{% endif %}
 																{% elif mercado == 'par' %}
 																		{% if coluna['ParOuImpar'] == 'Par' %}
-																				<td style="text-align: center" class="bg-success">  
+																				<td style="text-align: center" class="bg-success">
 																						{{ coluna['Resultado'] }}
 																				</td>
 																		{% else %}
-																				<td style="text-align: center" class="bg-danger">  
+																				<td style="text-align: center" class="bg-danger">
 																						{{ coluna['Resultado'] }}
 																				</td>
 																		{% endif %}
 																{% elif mercado == 'impar' %}
 																		{% if coluna['ParOuImpar'] == 'Ímpar' %}
-																				<td style="text-align: center" class="bg-success">  
+																				<td style="text-align: center" class="bg-success">
 																						{{ coluna['Resultado'] }}
 																				</td>
 																		{% else %}
-																				<td style="text-align: center" class="bg-danger">  
+																				<td style="text-align: center" class="bg-danger">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% endif %}
+																{% elif mercado == 'home_win' %}
+																		{% if coluna['home_win'] == True %}
+																				<td style="text-align: center" class="bg-success">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% else %}
+																				<td style="text-align: center" class="bg-danger">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% endif %}
+																{% elif mercado == 'away_win' %}
+																		{% if coluna['away_win'] == True %}
+																				<td style="text-align: center" class="bg-success">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% else %}
+																				<td style="text-align: center" class="bg-danger">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% endif %}
+																{% elif mercado == 'draw_ht' %}
+																		{% if coluna['draw_ht'] == True %}
+																				<td style="text-align: center" class="bg-success">
+																						{{ coluna['Resultado'] }}
+																				</td>
+																		{% else %}
+																				<td style="text-align: center" class="bg-danger">
 																						{{ coluna['Resultado'] }}
 																				</td>
 																		{% endif %}
@@ -253,9 +282,6 @@
 				updateParams();
 			}
 
-
-
-
 			function updateParams() {
 				const mercado = document.getElementById('mercado').value;
 				const periodo = document.getElementById('periodo').value;
@@ -283,7 +309,6 @@
 					})
 					.then(html => {
 						document.body.innerHTML = html;
-
 
 						// Restaura os valores selecionados após a atualização do HTML
 						document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over2_5';
@@ -330,9 +355,6 @@
 		const closeModalButton = document.getElementById('closeModalButton');
 		const modal = document.getElementById('ligaModal');
 
-		const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-
 		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
 		let storedMercadoChoice = document.getElementById('mercado').value
 		let storedPeriodo = document.getElementById('periodo').value
@@ -351,6 +373,12 @@
 																storedMercadoChoice : null,
 			"impar": storedMercadoChoice.includes("impar") ? 
 																storedMercadoChoice : null,
+			"home_win": storedMercadoChoice.includes("home") ? 
+																storedMercadoChoice : null,
+			"away_win": storedMercadoChoice.includes("away") ? 
+																storedMercadoChoice : null,
+			"draw_ht": storedMercadoChoice.includes("draw_ht") ? 
+																storedMercadoChoice : null
 		}
 
 		// Define o nome do campeonato baseado no ID
@@ -404,9 +432,6 @@
 			}
 		});
 	}
-
-	
-	
 
 	function generateTable(data){
 		let table = `<table border="1" class="table"><thead>
@@ -479,8 +504,6 @@
 		color: aqua;
 	}
 
-	
-	
 	/* Botão de fechar (X) */
 	.close {
 		color: #aaa;

@@ -219,49 +219,38 @@ def index():
     if resposta.status_code == 200:
         json_result = resposta.json()
         for linha in json_result['Linhas']:
+            if 'Hora' not in linha:
+                linha['Hora'] = 00
             for coluna in linha['Colunas']:
                 if 'Resultado' in coluna:
-                    soma_gols = int(coluna['Resultado'].split('-')[0]) + int(coluna['Resultado'].split('-')[1])
-                    coluna['SomaGols'] = soma_gols
+                    gols_time1, gols_time2 = map(int, coluna['Resultado'].split('-'))
+                    soma_gols = gols_time1 + gols_time2
+                    
+                    coluna['soma_gols'] = soma_gols
+                    
                     odds = coluna.get('Odds')
                     
                     home_ht, away_ht = coluna['Resultado_HT'].split('-')
                     
-                    # Calcule a soma dos gols para os outros mercados
-                    coluna['SomaGols1_5'] = soma_gols
-                    coluna['SomaGols0_5'] = soma_gols
-
-
-                    coluna['SomaGolsUnder0_5'] = soma_gols
-                    coluna['SomaGolsUnder1_5'] = soma_gols
-                    coluna['SomaGolsUnder2_5'] = soma_gols
-                    coluna['SomaGolsUnder3_5'] = soma_gols
-
-                    # Calculos para Ambas Marcam
-                    gols_time1 = int(coluna['Resultado'].split('-')[0])
-                    gols_time2 = int(coluna['Resultado'].split('-')[1])
-                    
-                    coluna['AmbasMarcam'] = (gols_time1 > 0 and gols_time2 > 0)
-                    coluna['AmbasMarcamNao'] = (gols_time1 == 0 or gols_time2 == 0)
-                    coluna['SomaGols'] = gols_time1 + gols_time2
+                    if gols_time1 > 0 and gols_time2 > 0:
+                        coluna['ambas_marcam'] = True    
+                    elif gols_time1 == 0 or gols_time2 == 0:
+                        coluna['ambas_marcam'] = False    
                     
                     # Adicionando a lógica para Par ou Ímpar
                     if soma_gols % 2 == 0:
-                        coluna['ParOuImpar'] = 'Par'
+                        coluna['par'] = True
                     else:
-                        coluna['ParOuImpar'] = 'Ímpar'
+                        coluna['par'] = False
                         
                     if gols_time1 > gols_time2:
                         coluna['home_win'] = True
-                        coluna['away_win'] = False
                         coluna['draw_ft'] = False
                     elif gols_time1 < gols_time2:
                         coluna['home_win'] = False
-                        coluna['away_win'] = True
                         coluna['draw_ft'] = False
                     else:
                         coluna['home_win'] = False
-                        coluna['away_win'] = False
                         coluna['draw_ft'] = True
                     
                     if home_ht == away_ht:
@@ -276,11 +265,11 @@ def index():
                     for odd in odds.split(";"):
                         if not odd:  # Ignorar strings vazias resultantes do split
                             continue
-  
                         odd_name, odd_value = odd.split("@")
+                        
                         odds_dict[odd_name] = float(odd_value)  # Convertendo o valor para float
 
-                    coluna["ProcessedOdds"] = odds_dict
+                    coluna["processed_odds"] = odds_dict
     else:
         json_result = []
         print(resposta.status_code)

@@ -3,418 +3,53 @@
 {% block title %}Jogos Estrela Bet{% endblock %}
 
 {% block body %}
-	<div class="content-wrapper">
-		<div class="row">
-			<div class="page-header col-12">
-				<div class="row col-12">
-					<center>
-						<a href="#" onclick="selectCampeonato('1')">
-							<img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="flag italiano" width="60" />
-						</a>
-						<a href="#" onclick="selectCampeonato('2')">
-							<img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="flag inglês" width="60" />
-						</a>
-						<a href="#" onclick="selectCampeonato('3')">
-							<img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="flag espanhol" width="60" />
-						</a>
-					</center>
-				</div>
-			</div>
+<div class="content-wrapper">
+  <div class="page-header">
+    <div class="row col-12">
+      <center>
+        <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="fetchData(1)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="fetchData(2)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="fetchData(3)" style="cursor: pointer;" />
+      </center>
+    </div>
+  </div>
 
-			<div class="page-header col-12">
-				<div class="row">
-					<form id="paramForm" class="forms-sample">
-						<div class="form-group">
-							<label for="mercado">Mercado:</label>
-							<select id="mercado" name="mercado" onchange="updateParams()" class="form-select">
-								<optgroup label="Over" style="font-weight: bold;">
-									<option value="over_0.5">Over 0.5</option>
-									<option value="over_1.5">Over 1.5</option>
-									<option value="over_2.5" selected>Over 2.5</option>
-									<option value="over_3.5">Over 3.5</option>
-								</optgroup>
-								<optgroup label="Under" style="font-weight: bold;">
-									<option value="under_0.5">Under 0.5</option>
-									<option value="under_1.5">Under 1.5</option>
-									<option value="under_2.5">Under 2.5</option>
-									<option value="under_3.5">Under 3.5</option>
-								</optgroup>
-								<optgroup label="Ambas Marcam" style="font-weight: bold;">
-									<option value="ambas_marcam_sim">Ambas Marcam: Sim</option>
-									<option value="ambas_marcam_nao">Ambas Marcam: Não</option>
-								</optgroup>
-								<optgroup label="Par ou Ímpar" style="font-weight: bold;">
-									<option value="par">Par</option>
-									<option value="impar">Ímpar</option>
-								</optgroup>
-								<optgroup label="Vencedor">
-									<option value="home_win">Casa Vence</option>
-									<option value="away_win">Fora Vence</option>
-								</optgroup>
-								<optgroup label="HT">
-									<option value="draw_ht">Empate</option>
-								</optgroup>
-							</select>
-						</div>
-					</form>
+    <div class="page-header col-12">
+      <form id="paramForm" class="forms-sample">
+        <div class="form-group">
+          <label for="mercado">Mercado:</label>
+          <select id="mercado" name="mercado" class="form-select" onchange="updateParams()"></select>
+        </div>
+        <div class="form-group">
+          <label for="periodo">Período (horas):</label>
+          <select id="periodo" name="periodo" class="form-select" onchange="updateParams()">
+            <option value="3">3 horas</option>
+            <option value="6">6 horas</option>
+            <option value="12" selected>12 horas</option>
+            <option value="24">24 horas</option>
+            <option value="48">48 horas</option>
+          </select>
+        </div>
+      </form>
+    </div>
 
-					<div class="form-group">
-						<label for="periodo">Período (horas):</label>
-						<select id="periodo" name="periodo" onchange="updateParams()" class="form-select">
-							<option value="3">3 horas</option>
-							<option value="6">6 horas</option>
-							<option value="12">12 horas</option>
-							<option value="24" selected>24 horas</option>
-							<option value="48">48 horas</option>
-						</select>
-					</div>
-				</div>
-			</div>
-			<div>
-				<div>
+    <div class="checkbox-container">
+      <input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()"/>
+      <label for="mostrarOdds">Mostrar odds</label>
+    </div>
 
-					<div class="checkbox-container">
-						<input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()">
-						<label for="mostrarOdds">Mostrar odds</label>
-					</div>
+    <div class="text-end">
+      <button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
+        Detectar Padrões
+      </button>
+    </div>
 
-			<div style="text-align: right;">
-				<button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
-					Detectar Padrões
-				</button>
-			</div>
-			
-			{% if games != 0 %}
-				<div class="row">
-					<div class="col-lg-12 grid-margin stretch-card">
-						<div class="card">
-							<div class="card-body">
-								<div class="table-responsive">
-									<table class="table table-bordered">
-										<thead>
-											<tr>
-												<th> # </th>
-												{% for minutos in games['Minutos'] %}
-													<th>{{ minutos['Numero'] }}</th>
-												{% endfor %}
-											</tr>
-										</thead>
-										<tbody>
-											{% for linha in games['Linhas'] %}
-												<tr>
-													<td>{{ linha['Hora'] }}</td>
-													{% for coluna in linha['Colunas'] %}
-														{% if 'SomaGols' in coluna %}
-																{% if mercado.startswith('under') %}
-																		{% if mercado == 'under_0.5' %}
-																				{% if coluna['SomaGolsUnder0_5'] < 0.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }}
-																								
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'under_1.5' %}
-																				{% if coluna['SomaGolsUnder1_5'] < 1.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u15'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u15'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'under_2.5' %}
-																				{% if coluna['SomaGolsUnder2_5'] < 2.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u25'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u25'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'under_3.5' %}
-																				{% if coluna['SomaGolsUnder3_5'] < 3.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u35'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['u35'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% endif %}
-																{% elif mercado.startswith('over') %}
-																		{% if mercado == 'over_0.5' %}
-																				{% if coluna['SomaGols'] > 0.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} 
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }}
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'over_1.5' %}
-																				{% if coluna['SomaGols'] > 1.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o15'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o15'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'over_2.5' %}
-																				{% if coluna['SomaGols'] > 2.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o25'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o25'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'over_3.5' %}
-																				{% if coluna['SomaGols'] > 3.5 %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o35'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['o35'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% endif %}
-																{% elif mercado.startswith('ambas_marcam') %}
-																		{% if mercado == 'ambas_marcam_sim' %}
-																				{% if coluna['AmbasMarcam'] %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['ambs'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['ambs'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% elif mercado == 'ambas_marcam_nao' %}
-																				{% if coluna['AmbasMarcamNao'] %}
-																						<td style="text-align: center" class="bg-success">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['ambn'] }}
-																								</span>
-																						</td>
-																				{% else %}
-																						<td style="text-align: center" class="bg-danger">
-																								{{ coluna['Resultado'] }} <br>
-																								<span class="odds">
-																									odd: {{ coluna['ProcessedOdds']['ambn'] }}
-																								</span>
-																						</td>
-																				{% endif %}
-																		{% endif %}
-																{% elif mercado == 'par' %}
-																		{% if coluna['ParOuImpar'] == 'Par' %}
-																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }}
-																				</td>
-																		{% else %}
-																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }}
-																				</td>
-																		{% endif %}
-																{% elif mercado == 'impar' %}
-																		{% if coluna['ParOuImpar'] == 'Ímpar' %}
-																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }}
-																				</td>
-																		{% else %}
-																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }}
-																				</td>
-																		{% endif %}
-																{% elif mercado == 'home_win' %}
-																		{% if coluna['home_win'] == True %}
-																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['ftc'] }}
-																						</span>
-																				</td>
-																		{% else %}
-																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['ftc'] }}
-																						</span>
-																				</td>
-																		{% endif %}
-																{% elif mercado == 'away_win' %}
-																		{% if coluna['away_win'] == True %}
-																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['ftv'] }}
-																						</span>
-																				</td>
-																		{% else %}
-																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['ftv'] }}
-																						</span>
-																				</td>
-																		{% endif %}
-																{% elif mercado == 'draw_ht' %}
-																		{% if coluna['draw_ht'] == True %}
-																				<td style="text-align: center" class="bg-success">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['hte'] }}
-																						</span>
-																				</td>
-																		{% else %}
-																				<td style="text-align: center" class="bg-danger">
-																						{{ coluna['Resultado'] }} <br>
-																						<span class="odds">
-																							odd: {{ coluna['ProcessedOdds']['hte'] }}
-																						</span>
-																				</td>
-																		{% endif %}
-																{% endif %}
-														{% endif %}
-													{% endfor %}
-												</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			{% else %}
+    <div id="gamesTableContainer" class="row mt-3">
+      <!-- Tabela será renderizada via JS -->
+    </div>
+  </div>
+</div>
 
-				<div class="alert alert-warning" role="alert">
-					Nenhum jogo encontrado.
-				</div>
-			{% endif %}
-		</div>
-	</div>
-	<script>
-			function selectCampeonato(campeonatoId) {
-				// Armazena o campeonato no localStorage
-				localStorage.setItem('campeonato', campeonatoId);
-
-				// Atualiza os parâmetros da URL e recarrega o conteúdo
-				updateParams();
-			}
-
-			function updateParams() {
-				const mercado = document.getElementById('mercado').value;
-				const periodo = document.getElementById('periodo').value;
-				const campeonato = localStorage.getItem('campeonato') || '1'; // Pega o valor do campeonato do localStorage
-
-
-				// Armazenar as seleções no localStorage
-				localStorage.setItem('mercado', mercado);
-				localStorage.setItem('periodo', periodo);
-				localStorage.setItem('campeonato', campeonato);
-
-				// Atualiza os parâmetros da URL
-				const url = new URL(window.location.href);
-				url.searchParams.set('mercado', mercado);
-				url.searchParams.set('periodo', periodo);
-				url.searchParams.set('campeonato', campeonato);
-
-				// Faz o fetch e atualiza o conteúdo da página
-				fetch(url)
-					.then(response => {
-						if (!response.ok) {
-							throw new Error('Network response was not ok');
-						}
-						return response.text();
-					})
-					.then(html => {
-						document.body.innerHTML = html;
-
-						// Restaura os valores selecionados após a atualização do HTML
-						document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over2_5';
-						document.getElementById('periodo').value = localStorage.getItem('periodo') || '24';
-					})
-					.catch(error => {
-						console.error('There has been a problem with your fetch operation:', error);
-					});
-			}
-
-
-	// Quando a página é carregada, restaurar as seleções
-	window.onload = function() {
-    const storedMercado = localStorage.getItem('mercado');
-    const storedPeriodo = localStorage.getItem('periodo');
-    const storedCampeonato = localStorage.getItem('campeonato');
-
-    if (storedMercado) {
-        document.getElementById('mercado').value = storedMercado;
-    }
-    if (storedPeriodo) {
-        document.getElementById('periodo').value = storedPeriodo;
-    }
-
-    // Define o campeonato no localStorage caso não exista
-    if (!storedCampeonato) {
-        localStorage.setItem('campeonato', '1'); // Italiano como padrão
-    }
-};
-
-	</script>
 	<!-- MODAL -->
 	<div id="ligaModal" class="modal" style="display: none;">
 		<div class="modal-content">
@@ -426,6 +61,14 @@
 
 <script>
 	function openModal(){
+		const currentUrl = window.location.href;
+
+		// Cria um objeto URL a partir da URL atual
+		const url = new URL(currentUrl);
+		
+		// Usa URLSearchParams para obter os parâmetros da URL
+		const params = new URLSearchParams(url.search);
+		let storedCampeonato = params.get('campeonato');
 		const openModalButton = document.getElementById('openModalButton');
 		const closeModalButton = document.getElementById('closeModalButton');
 		const modal = document.getElementById('ligaModal');
@@ -433,7 +76,6 @@
 		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
 		let storedMercadoChoice = document.getElementById('mercado').value
 		let storedPeriodo = document.getElementById('periodo').value
-		let storedCampeonato = localStorage.getItem('campeonato');
 
 		const data = {
 			"periodo": storedPeriodo,
@@ -489,8 +131,6 @@
 
 		document.getElementById('head-busca').innerHTML = `
 				Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
-
-		//document.getElementById('leagueId').innerHTML = storedMercado
 
 		modal.style.display = 'block';
 		document.body.style.overflow = 'hidden';
@@ -568,49 +208,242 @@ function toggleTableContent() {
 	oddsElements.forEach((element) => {
 			element.style.display = isChecked ? "inline" : "none";
 	});
+
+	
+}
+
+</script>
+
+<script>
+	async function fetchData(leagueId) {
+    const mercado = document.getElementById('mercado').value;
+    const periodo = document.getElementById('periodo').value;
+		setUrl(leagueId)
+		
+    try {
+        const response = await fetch(`?campeonato=${leagueId}&mercado=${mercado}&periodo=${periodo}`, {
+					headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) {
+					throw new Error(`Erro na requisição: ${response.statusText}`);
+        }
+				
+        const games = await response.json();
+        renderTable(games, mercado, periodo);
+    } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+    }
+}
+
+	function loadFirstData(){
+		const mercadoSelect = document.getElementById("mercado");
+		setUrl(1)
+		
+		// Preenchendo opções de mercado dinamicamente
+		const mercados = [
+			{ label: "Over", options: ["0.5", "1.5", "2.5", "3.5"] },
+			{ label: "Under", options: ["0.5", "1.5", "2.5", "3.5"] },
+			{ label: "Ambas Marcam", options: ["Sim", "Não"] },
+			{ label: "Par ou Ímpar", options: ["Par", "Ímpar"] },
+			{ label: "Vencedor", options: ["Casa Vence", "Fora Vence"] },
+			{ label: "HT", options: ["Empate"] },
+		];
+
+		// aqui nos seta o valor padrao
+    const selectedValue = "over_2.5"
+
+		mercados.forEach((group) => {
+			const optgroup = document.createElement("optgroup");
+			optgroup.label = group.label;
+	
+			group.options.forEach((option) => {
+				const opt = document.createElement("option");
+				opt.value = `${group.label.toLowerCase().replaceAll(" ", "_")}_` +
+										`${option.toLowerCase().replaceAll(" ", "_")}`;
+
+				opt.textContent = (group.label === "Over" || group.label === "Under") 
+				? `${group.label} ${option}` 
+				: option;
+
+				if (opt.value === selectedValue) {
+					opt.selected = true; 
+				}
+
+				optgroup.appendChild(opt);
+			});
+	
+			mercadoSelect.appendChild(optgroup);
+		});
+	}
+
+	document.addEventListener("DOMContentLoaded", () => {
+		const games = {{ games|tojson }}
+		const mercado = "{{ mercado }}"
+		const periodo = document.getElementById('periodo').value;
+		loadFirstData()
+
+		renderTable(games, mercado, periodo);
+	});
+
+	function renderTable(games, mercado, periodo, isChecked) {
+		console.log(games)
+		const gamesContainer = document.getElementById("gamesTableContainer");
+
+		gamesContainer.innerHTML = ""; // Limpa a tabela
+		if (!games || games.Minutos.length === 0) {
+			gamesContainer.innerHTML = "<p>Nenhum jogo disponível</p>";
+			return;
+		}
+
+		const gamesToShow = games.Linhas.slice(0, periodo);
+
+		if (gamesToShow.length === 0) {
+				gamesContainer.innerHTML = "<p>Nenhum jogo disponível no período especificado</p>";
+				return;
+		}
+
+		const table = document.createElement("table");
+		table.classList.add("table", "table-bordered");
+
+		// Cabeçalho
+		const thead = document.createElement("thead");
+		const headerRow = document.createElement("tr");
+		headerRow.innerHTML = `<th>#</th>${games.Minutos.map((m) => `<th>${m.Numero}</th>`).join("")}`;
+		thead.appendChild(headerRow);
+		table.appendChild(thead);
+
+		// Corpo
+		const tbody = document.createElement("tbody");
+		gamesToShow.forEach((linha) => {
+			const row = document.createElement("tr");
+			const cols = linha.Colunas.map((coluna) => {
+
+				// se nao ha resultado skipa
+				if (!coluna.Resultado) return
+
+				const isSuccess = verifyResult(coluna, mercado);
+
+				return `
+					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center">
+						${coluna.Resultado}
+						${coluna.odd ? `<br><span class="odds" style= ${isChecked ? "'display: inline'" : "'display: none'"}>odd: ${coluna.odd}</span>` : ""}
+					</td>`;
+			});
+
+			row.innerHTML = `<td>${linha.Hora}</td>${cols.join("")}`;
+			tbody.appendChild(row);
+		});
+
+		table.appendChild(tbody);
+		gamesContainer.appendChild(table);
+	}
+
+// Função para verificar o resultado de acordo com o mercado selecionado
+function verifyResult(coluna, mercado) {
+	const isUnder = mercado.startsWith("under");
+	const threshold = parseFloat(mercado.split("_")[1]);
+	let isSuccess = false;
+	let processedOdds = null;
+
+	switch (true) {
+			case mercado.startsWith("over"):
+					isSuccess = coluna.soma_gols > threshold;
+					processedOdds = coluna.processed_odds[`o${threshold * 10}`];
+					break;
+			case mercado.startsWith("under"):
+					isSuccess = coluna.soma_gols < threshold;
+					processedOdds = coluna.processed_odds[`u${threshold * 10}`];
+					break;
+			case mercado.startsWith("ambas_marcam"):
+					isSuccess = 
+							(mercado.endsWith("sim") && coluna.ambas_marcam) ||
+							(mercado.endsWith("não") && !coluna.ambas_marcam);
+					processedOdds = mercado.endsWith("sim") ? coluna.processed_odds.ambs : coluna.processed_odds.ambn;
+					break;
+			case mercado.startsWith("par_ou_ímpar"):
+					isSuccess = 
+							(mercado.endsWith("_par") && coluna.par) || 
+							(mercado.endsWith("_ímpar") && !coluna.par);
+					break;
+			case mercado.startsWith("vencedor"):
+					isSuccess = 
+							(mercado.endsWith("casa_vence") && coluna.home_win) ||
+							(mercado.endsWith("fora_vence") && !coluna.home_win);
+					processedOdds = mercado.endsWith("casa_vence") ? coluna.processed_odds.ftc : coluna.processed_odds.ftv;
+					break;
+			case mercado.startsWith("ht"):
+					isSuccess = coluna.draw_ht;
+					processedOdds = coluna.processed_odds.hte;
+					break;
+			default:
+					break;
+	}
+
+	coluna.odd = processedOdds; // Adiciona as odds processadas à coluna
+	return isSuccess;
+}
+
+function updateParams(){
+	const mercado = document.getElementById('mercado').value;
+	const periodo = document.getElementById('periodo').value;
+	const isChecked = document.getElementById("mostrarOdds").checked;
+
+	const games = {{ games|tojson}}
+
+	renderTable(games, mercado, periodo, isChecked)
+}
+
+function setUrl(leagueId){
+	const url = new URL(window.location.href);
+
+	url.searchParams.set('campeonato', leagueId);
+	window.history.pushState({}, '', url);
+
+	return url
 }
 </script>
 	
-	<style>
-		/* Estilos do modal */
-	.modal {
-		display: none; /* Inicialmente oculto */
-		position: fixed; /* Fica fixo na tela */
-		z-index: 1; /* Coloca o modal acima do conteúdo */
-		left: 0;
-		top: 0;
-		width: 100%; /* 100% da largura da tela */
-		height: 100%; /* 100% da altura da tela */
-		background-color: rgba(0, 0, 0, 0.4); /* Fundo semitransparente */
-	}
-	
-	/* Conteúdo do modal */
-	.modal-content {
-		background-color: rgba(0, 0, 0, 0.8);
-		margin: 15% auto;
-		padding: 20px;
-		border: 1px solid #888;
-		width: 80%; 
-		color: aqua;
-	}
-
-	/* Botão de fechar (X) */
-	.close {
-		color: #aaa;
-		float: right;
-		font-size: 28px;
-		font-weight: bold;
-	}
-	
-	.close:hover,
-	.close:focus {
-		color: black;
-		text-decoration: none;
-		cursor: pointer;
+<style>
+	/* Estilos do modal */
+.modal {
+	display: none; /* Inicialmente oculto */
+	position: fixed; /* Fica fixo na tela */
+	z-index: 1; /* Coloca o modal acima do conteúdo */
+	left: 0;
+	top: 0;
+	width: 100%; /* 100% da largura da tela */
+	height: 100%; /* 100% da altura da tela */
+	background-color: rgba(0, 0, 0, 0.4); /* Fundo semitransparente */
 }
-	.odds {
-		font-size: small;
-		display: none;
-	}
+
+/* Conteúdo do modal */
+.modal-content {
+	background-color: rgba(0, 0, 0, 0.8);
+	margin: 15% auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 80%; 
+	color: aqua;
+}
+
+/* Botão de fechar (X) */
+.close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+.odds {
+	font-size: small;
+	
+}
 </style>
 {% endblock %}

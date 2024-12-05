@@ -274,7 +274,12 @@ def index():
         json_result = []
         print(resposta.status_code)
 
-    return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
+    # Verifica se é uma requisição AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(json_result)  # Retorna os dados como JSON para AJAX
+    else:
+        # Renderiza a página para requisições normais
+        return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
 
 @kirongames.route('/auto-search', methods=['POST'])
 @csrf.exempt

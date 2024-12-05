@@ -4,20 +4,15 @@
 
 {% block body %}
 <div class="content-wrapper">
-  <div class="row">
-    <div class="page-header col-12">
-      <div class="row col-12 text-center">
-        <a href="#" data-championship="1" class="flag-link">
-          <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="flag italiano" width="60" />
-        </a>
-        <a href="#" data-championship="2" class="flag-link">
-          <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="flag inglês" width="60" />
-        </a>
-        <a href="#" data-championship="3" class="flag-link">
-          <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="flag espanhol" width="60" />
-        </a>
-      </div>
+  <div class="page-header">
+    <div class="row col-12">
+      <center>
+        <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="fetchData(1)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="fetchData(2)" style="cursor: pointer;" />
+        <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="fetchData(3)" style="cursor: pointer;" />
+      </center>
     </div>
+  </div>
 
     <div class="page-header col-12">
       <form id="paramForm" class="forms-sample">
@@ -55,73 +50,6 @@
   </div>
 </div>
 
-	<!-- <script>
-			function selectCampeonato(campeonatoId) {
-				// Armazena o campeonato no localStorage
-				localStorage.setItem('campeonato', campeonatoId);
-
-				// Atualiza os parâmetros da URL e recarrega o conteúdo
-				updateParams();
-			}
-
-			function updateParams() {
-				const mercado = document.getElementById('mercado').value;
-				const periodo = document.getElementById('periodo').value;
-				const campeonato = localStorage.getItem('campeonato') || '1'; // Pega o valor do campeonato do localStorage
-
-
-				// Armazenar as seleções no localStorage
-				localStorage.setItem('mercado', mercado);
-				localStorage.setItem('periodo', periodo);
-				localStorage.setItem('campeonato', campeonato);
-
-				// Atualiza os parâmetros da URL
-				const url = new URL(window.location.href);
-				url.searchParams.set('mercado', mercado);
-				url.searchParams.set('periodo', periodo);
-				url.searchParams.set('campeonato', campeonato);
-
-				// Faz o fetch e atualiza o conteúdo da página
-				fetch(url)
-					.then(response => {
-						if (!response.ok) {
-							throw new Error('Network response was not ok');
-						}
-						return response.text();
-					})
-					.then(html => {
-						document.body.innerHTML = html;
-
-						// Restaura os valores selecionados após a atualização do HTML
-						document.getElementById('mercado').value = localStorage.getItem('mercado') || 'over2_5';
-						document.getElementById('periodo').value = localStorage.getItem('periodo') || '24';
-					})
-					.catch(error => {
-						console.error('There has been a problem with your fetch operation:', error);
-					});
-			}
-
-
-	// Quando a página é carregada, restaurar as seleções
-	window.onload = function() {
-    const storedMercado = localStorage.getItem('mercado');
-    const storedPeriodo = localStorage.getItem('periodo');
-    const storedCampeonato = localStorage.getItem('campeonato');
-
-    if (storedMercado) {
-        document.getElementById('mercado').value = storedMercado;
-    }
-    if (storedPeriodo) {
-        document.getElementById('periodo').value = storedPeriodo;
-    }
-
-    // Define o campeonato no localStorage caso não exista
-    if (!storedCampeonato) {
-        localStorage.setItem('campeonato', '1'); // Italiano como padrão
-    }
-};
-
-	</script> -->
 	<!-- MODAL -->
 	<div id="ligaModal" class="modal" style="display: none;">
 		<div class="modal-content">
@@ -133,6 +61,14 @@
 
 <script>
 	function openModal(){
+		const currentUrl = window.location.href;
+
+		// Cria um objeto URL a partir da URL atual
+		const url = new URL(currentUrl);
+		
+		// Usa URLSearchParams para obter os parâmetros da URL
+		const params = new URLSearchParams(url.search);
+		let storedCampeonato = params.get('campeonato');
 		const openModalButton = document.getElementById('openModalButton');
 		const closeModalButton = document.getElementById('closeModalButton');
 		const modal = document.getElementById('ligaModal');
@@ -140,7 +76,6 @@
 		let storedMercado = document.getElementById('mercado').selectedOptions[0].textContent
 		let storedMercadoChoice = document.getElementById('mercado').value
 		let storedPeriodo = document.getElementById('periodo').value
-		let storedCampeonato = localStorage.getItem('campeonato');
 
 		const data = {
 			"periodo": storedPeriodo,
@@ -196,8 +131,6 @@
 
 		document.getElementById('head-busca').innerHTML = `
 				Busca Automática - ${storedMercado} - ultimas ${storedPeriodo} horas`
-
-		//document.getElementById('leagueId').innerHTML = storedMercado
 
 		modal.style.display = 'block';
 		document.body.style.overflow = 'hidden';
@@ -282,8 +215,30 @@ function toggleTableContent() {
 </script>
 
 <script>
+	async function fetchData(leagueId) {
+    const mercado = document.getElementById('mercado').value;
+    const periodo = document.getElementById('periodo').value;
+		setUrl(leagueId)
+		
+    try {
+        const response = await fetch(`?campeonato=${leagueId}&mercado=${mercado}&periodo=${periodo}`, {
+					headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) {
+					throw new Error(`Erro na requisição: ${response.statusText}`);
+        }
+				
+        const games = await response.json();
+        renderTable(games, mercado, periodo);
+    } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+    }
+}
+
 	function loadFirstData(){
 		const mercadoSelect = document.getElementById("mercado");
+		setUrl(1)
 		
 		// Preenchendo opções de mercado dinamicamente
 		const mercados = [
@@ -294,9 +249,9 @@ function toggleTableContent() {
 			{ label: "Vencedor", options: ["Casa Vence", "Fora Vence"] },
 			{ label: "HT", options: ["Empate"] },
 		];
-	
+
 		// aqui nos seta o valor padrao
-    const selectedValue = "under_2.5"
+    const selectedValue = "over_2.5"
 
 		mercados.forEach((group) => {
 			const optgroup = document.createElement("optgroup");
@@ -304,8 +259,12 @@ function toggleTableContent() {
 	
 			group.options.forEach((option) => {
 				const opt = document.createElement("option");
-				opt.value = `${group.label.toLowerCase().replaceAll(" ", "_")}_${option.toLowerCase().replaceAll(" ", "_")}`;
-				opt.textContent = `${option}`;
+				opt.value = `${group.label.toLowerCase().replaceAll(" ", "_")}_` +
+										`${option.toLowerCase().replaceAll(" ", "_")}`;
+
+				opt.textContent = (group.label === "Over" || group.label === "Under") 
+				? `${group.label} ${option}` 
+				: option;
 
 				if (opt.value === selectedValue) {
 					opt.selected = true; 
@@ -319,16 +278,16 @@ function toggleTableContent() {
 	}
 
 	document.addEventListener("DOMContentLoaded", () => {
-		const games = {{ games|tojson}}
+		const games = {{ games|tojson }}
 		const mercado = "{{ mercado }}"
 		const periodo = document.getElementById('periodo').value;
-		console.log(games)
 		loadFirstData()
 
 		renderTable(games, mercado, periodo);
 	});
 
 	function renderTable(games, mercado, periodo, isChecked) {
+		console.log(games)
 		const gamesContainer = document.getElementById("gamesTableContainer");
 
 		gamesContainer.innerHTML = ""; // Limpa a tabela
@@ -433,6 +392,15 @@ function updateParams(){
 	const games = {{ games|tojson}}
 
 	renderTable(games, mercado, periodo, isChecked)
+}
+
+function setUrl(leagueId){
+	const url = new URL(window.location.href);
+
+	url.searchParams.set('campeonato', leagueId);
+	window.history.pushState({}, '', url);
+
+	return url
 }
 </script>
 	

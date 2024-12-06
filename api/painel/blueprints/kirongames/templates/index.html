@@ -223,7 +223,7 @@
 		const isChecked = document.getElementById("mostrarRanks").checked;
 	
 		// Find all elements with the class "odds"
-		const oddsElements = document.querySelectorAll(".ranks");
+		const oddsElements = document.querySelectorAll(".showRank");
 	
 		// Toggle the display of the odds based on the checkbox state
 		oddsElements.forEach((element) => {
@@ -236,40 +236,40 @@
 <script>
 	async function renderRank(rank, isChecked){
 		const rankContainer = document.getElementById("teams_rank");
+		rankContainer.classList.add("showRank")
 		rankContainer.innerHTML = ""; // Limpa a tabela
 
-		rankContainer.style.display = isChecked ? "inline" : "none";
+		rankContainer.style.display = isChecked ? "inline" : "none"
+
 		const table_rank = document.createElement("table");
 		table_rank.classList.add("table", "table-bordered");
 		const thead = document.createElement("thead");
 		thead.innerHTML = `
-			<tr>
-				<th>Time</th>
-				<th>Jogos</th>
-				<th>Pontos</th>
-				<th>Gols</th>
-				<th>Media de Gols</th>
-			</tr>
+		<tr>
+			<th>Time</th>
+			<th>Jogos</th>
+			<th>Pontos</th>
+			<th>Gols</th>
+			<th>Media de Gols</th>
+		</tr>
 		`;
-		table_rank.appendChild(thead);
-		const tbody = document.createElement("tbody");
-		rank.forEach((linha) => {
-			const row = document.createElement("tr");
-			row.classList.add("ranks");
-			row.innerHTML = `
-				<td>${linha.Time}</td>
-				<td>${linha.Jogos}</td>
-				<td>${linha.Pontos}</td>
-				<td>${linha.Gols}</td>
-				<td>${linha.MediaGols.toFixed(2)}</td>
+	table_rank.appendChild(thead);
+	const tbody = document.createElement("tbody");
+	rank.forEach((linha) => {
+		const row = document.createElement("tr");
+		row.innerHTML = `
+		<td>${linha.Time}</td>
+		<td>${linha.Jogos}</td>
+			<td>${linha.Pontos}</td>
+			<td>${linha.Gols}</td>
+			<td>${linha.MediaGols.toFixed(2)}</td>
 			`;
 			tbody.appendChild(row);
 		});
-		table_rank.appendChild(tbody);
-
-		rankContainer.appendChild(table_rank);
-	}
-
+	table_rank.appendChild(tbody);
+	
+	rankContainer.appendChild(table_rank);
+}
 </script>
 
 <script>
@@ -297,8 +297,16 @@
 	}
 
 	function loadFirstData(){
+		const currentUrl = window.location.href;
+
+		// Cria um objeto URL a partir da URL atual
+		const url = new URL(currentUrl);
+		
+		// Usa URLSearchParams para obter os parâmetros da URL
+		const params = new URLSearchParams(url.search);
+		const storedCampeonato = params.get('campeonato');
 		const mercadoSelect = document.getElementById("mercado");
-		setUrl(1)
+		setUrl(storedCampeonato)
 		
 		// Preenchendo opções de mercado dinamicamente
 		const mercados = [
@@ -340,9 +348,10 @@
 	document.addEventListener("DOMContentLoaded", () => {
 		const games = {{ games|tojson }}
 		const mercado = "{{ mercado }}"
+		const rank = {{ rank|tojson }}
 		const periodo = document.getElementById('periodo').value;
 		loadFirstData()
-		renderRank()
+		renderRank(rank, false)
 
 		renderTable(games, mercado, periodo);
 	});

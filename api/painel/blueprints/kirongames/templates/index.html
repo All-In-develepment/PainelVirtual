@@ -3,6 +3,7 @@
 {% block title %}Jogos Estrela Bet{% endblock %}
 
 {% block body %}
+
 	<div class="content-wrapper">
 		<div class="page-header">
 			<div class="row col-12">
@@ -358,55 +359,92 @@
 
 	function renderTable(games, mercado, periodo, isChecked) {
 		const gamesContainer = document.getElementById("gamesTableContainer");
-
+	
 		gamesContainer.innerHTML = ""; // Limpa a tabela
 		if (!games || games.Minutos.length === 0) {
 			gamesContainer.innerHTML = "<p>Nenhum jogo disponível</p>";
 			return;
 		}
-
+	
 		const gamesToShow = games.Linhas.slice(0, periodo);
-
+	
 		if (gamesToShow.length === 0) {
-				gamesContainer.innerHTML = "<p>Nenhum jogo disponível no período especificado</p>";
-				return;
+			gamesContainer.innerHTML = "<p>Nenhum jogo disponível no período especificado</p>";
+			return;
 		}
-
+	
 		const table = document.createElement("table");
 		table.classList.add("table", "table-bordered");
-
+	
 		// Cabeçalho
 		const thead = document.createElement("thead");
 		const headerRow = document.createElement("tr");
-		headerRow.innerHTML = `<th>#</th>${games.Minutos.map((m) => `<th>${m.Numero}</th>`).join("")}`;
+		headerRow.innerHTML = `<th>#</th>${games.Minutos.map((m) => `<th>${m.Numero}</th>`).join("")}<th>P</th><th>P/5</th><th>Gols</th>`;
 		thead.appendChild(headerRow);
 		table.appendChild(thead);
-
+	
 		// Corpo
 		const tbody = document.createElement("tbody");
-		gamesToShow.forEach((linha) => {
+		let blockSum = 0; // Acumula a porcentagem do bloco atual
+		let blockCount = 0; // Contador de linhas no bloco atual
+	
+		gamesToShow.forEach((linha, index) => {
 			const row = document.createElement("tr");
+			console.log(linha.Colunas);
+			let linhaPorcentagem = 0; // Porcentagem de greens na linha atual
+			let totalGols = 0; // Contador de gols da linha atual
 			const cols = linha.Colunas.map((coluna) => {
-
-				// se nao ha resultado skipa
-				if (!coluna.Resultado) return
-
+				if (!coluna.Resultado) return `<td></td>`;
+	
 				const isSuccess = verifyResult(coluna, mercado);
-
+	
+				// Calcular porcentagem para coluna P
+				linhaPorcentagem += isSuccess ? 1 : 0; // 1 ponto por green
+	
+				// Somar gols para a coluna Gols
+				const gols = parseInt(coluna.soma_gols || 0, 10); // Verifica e adiciona os gols, se houver
+				totalGols += gols;
+	
 				return `
 					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center">
 						${coluna.Resultado}
-						${coluna.odd ? `<br><span class="odds" style= ${isChecked ? "'display: inline'" : "'display: none'"}>odd: ${coluna.odd}</span>` : ""}
+						${coluna.odd ? `<br><span class="odds" style=${isChecked ? "'display: inline'" : "'display: none'"}>odd: ${coluna.odd}</span>` : ""}
 					</td>`;
 			});
-
-			row.innerHTML = `<td>${linha.Hora}</td>${cols.join("")}`;
+	
+			// Calcular porcentagem para a linha atual (P)
+			const totalGames = linha.Colunas.length;
+			const percentLinha = ((linhaPorcentagem / totalGames) * 100).toFixed(2);
+			blockSum += parseFloat(percentLinha); // Soma para o bloco
+			blockCount++;
+	
+			// Verificar se estamos no final de um bloco de 5 linhas
+			const isEndOfBlock = (index + 1) % 5 === 0 || index === gamesToShow.length - 1;
+			const percentBlock = isEndOfBlock ? (blockSum / blockCount).toFixed(2) : ""; // Média do bloco
+	
+			row.innerHTML = `
+				<td>${linha.Hora}</td>
+				${cols.join("")}
+				<td>${percentLinha}%</td>
+				<td>${percentBlock ? `${percentBlock}%` : ""}</td>
+				<td>${totalGols}</td>
+			`;
+	
+			// Resetar acumuladores se final do bloco
+			if (isEndOfBlock) {
+				blockSum = 0;
+				blockCount = 0;
+			}
+	
 			tbody.appendChild(row);
 		});
-
+	
 		table.appendChild(tbody);
 		gamesContainer.appendChild(table);
 	}
+	
+	
+	
 
 	// Função para verificar o resultado de acordo com o mercado selecionado
 	function verifyResult(coluna, mercado) {

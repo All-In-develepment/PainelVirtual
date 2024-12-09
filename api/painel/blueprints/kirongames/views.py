@@ -274,6 +274,7 @@ def index():
         json_result = []
         print(resposta.status_code)
 
+
     # Verifica se é uma requisição AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify(json_result)  # Retorna os dados como JSON para AJAX

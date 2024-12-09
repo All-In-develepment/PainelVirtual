@@ -3,7 +3,7 @@ from flask_login import login_required
 import requests
 from collections import defaultdict
 from datetime import datetime
-import re
+import json
 import pandas as pd
 
 from painel.extensions import csrf
@@ -209,6 +209,59 @@ def limit_last_games(games_by_team):
     for team, games in games_by_team.items():
         games_by_team[team] = sorted(games, key=lambda x: (x['Hora'], x['Minuto']), reverse=True)[:20]
 
+def make_rank(data):
+    # Extrair as colunas relevantes
+    partidas = []
+    for linha in data["Linhas"]:
+        for coluna in linha["Colunas"]:
+            if "Resultado" in coluna and coluna["Resultado"]:
+                resultado = coluna["Resultado"].split('-')
+                partidas.append({
+                    "TimeA": coluna["TimeA"],
+                    "TimeB": coluna["TimeB"],
+                    "GolsA": int(resultado[0]),
+                    "GolsB": int(resultado[1]),
+                })
+
+    df = pd.DataFrame(partidas)
+    
+    # Inicializar o dicionário de classificação
+    classificacao = {}
+
+    # Atualizar os dados para cada time
+    for _, row in df.iterrows():
+        for time, gols, gols_adversario in [
+            (row['TimeA'], row['GolsA'], row['GolsB']),
+            (row['TimeB'], row['GolsB'], row['GolsA']),
+        ]:
+            if time not in classificacao:
+                classificacao[time] = {"Time": time, "Jogos": 0, "Pontos": 0, "Gols": 0}
+
+            classificacao[time]["Jogos"] += 1
+            classificacao[time]["Gols"] += gols
+
+            if gols > gols_adversario:  # Vitória
+                classificacao[time]["Pontos"] += 3
+            elif gols == gols_adversario:  # Empate
+                classificacao[time]["Pontos"] += 1
+    
+    # Criar o DataFrame de classificação
+    classificacao_df = pd.DataFrame.from_dict(classificacao, orient='index')
+    classificacao_df["MediaGols"] = classificacao_df["Gols"] / classificacao_df["Jogos"]
+    
+    # Ordenar por pontos e exibir
+    classificacao_df = classificacao_df.sort_values(by=["Pontos", "Gols"], ascending=[False, False])
+    print(classificacao_df)
+    
+    # Devolve o dataframe em json
+    rank = []
+    # Percorre linha a linha e exibe o resultado
+    for _, row in classificacao_df.iterrows():
+        json_row = row.to_json()
+        rank.append(json.loads(json_row))
+
+    return(rank)
+
 @kirongames.route('/')
 def index():
     mercado = request.args.get('mercado', 'over_2.5')  # valor padrão se o parâmetro não for passado
@@ -218,6 +271,7 @@ def index():
     resposta =  get_api_data(liga, periodo)
     if resposta.status_code == 200:
         json_result = resposta.json()
+        rank = make_rank(json_result) # Chamando a função para criar a classificação
         for linha in json_result['Linhas']:
             if 'Hora' not in linha:
                 linha['Hora'] = 00
@@ -277,10 +331,10 @@ def index():
 
     # Verifica se é uma requisição AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify(json_result)  # Retorna os dados como JSON para AJAX
+        return jsonify({"json_result": json_result, "rank": rank})  # Retorna os dados como JSON para AJAX
     else:
         # Renderiza a página para requisições normais
-        return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado)
+        return render_template('index.html', games=json_result, enumerate=enumerate, mercado=mercado, rank=rank)
 
 @kirongames.route('/auto-search', methods=['POST'])
 @csrf.exempt

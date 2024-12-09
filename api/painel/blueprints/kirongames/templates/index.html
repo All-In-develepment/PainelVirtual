@@ -3,52 +3,60 @@
 {% block title %}Jogos Estrela Bet{% endblock %}
 
 {% block body %}
-<div class="content-wrapper">
-  <div class="page-header">
-    <div class="row col-12">
-      <center>
-        <img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="fetchData(1)" style="cursor: pointer;" />
-        <img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="fetchData(2)" style="cursor: pointer;" />
-        <img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="fetchData(3)" style="cursor: pointer;" />
-      </center>
-    </div>
-  </div>
+	<div class="content-wrapper">
+		<div class="page-header">
+			<div class="row col-12">
+			<center>
+				<img src="{{ url_for('static', filename='images/flags/italy.png') }}" alt="Italy" width="60" onclick="fetchData(1)" style="cursor: pointer;" />
+				<img src="{{ url_for('static', filename='images/flags/england.png') }}" alt="England" width="60" onclick="fetchData(2)" style="cursor: pointer;" />
+				<img src="{{ url_for('static', filename='images/flags/spain.png') }}" alt="Spain" width="60" onclick="fetchData(3)" style="cursor: pointer;" />
+			</center>
+			</div>
+		</div>
 
-    <div class="page-header col-12">
-      <form id="paramForm" class="forms-sample">
-        <div class="form-group">
-          <label for="mercado">Mercado:</label>
-          <select id="mercado" name="mercado" class="form-select" onchange="updateParams()"></select>
-        </div>
-        <div class="form-group">
-          <label for="periodo">Período (horas):</label>
-          <select id="periodo" name="periodo" class="form-select" onchange="updateParams()">
-            <option value="3">3 horas</option>
-            <option value="6">6 horas</option>
-            <option value="12" selected>12 horas</option>
-            <option value="24">24 horas</option>
-            <option value="48">48 horas</option>
-          </select>
-        </div>
-      </form>
-    </div>
+		<div class="page-header col-12">
+			<form id="paramForm" class="forms-sample">
+				<div class="form-group">
+				<label for="mercado">Mercado:</label>
+				<select id="mercado" name="mercado" class="form-select" onchange="updateParams()"></select>
+				</div>
+				<div class="form-group">
+				<label for="periodo">Período (horas):</label>
+				<select id="periodo" name="periodo" class="form-select" onchange="updateParams()">
+					<option value="3">3 horas</option>
+					<option value="6">6 horas</option>
+					<option value="12" selected>12 horas</option>
+					<option value="24">24 horas</option>
+					<option value="48">48 horas</option>
+				</select>
+				</div>
+			</form>
+		</div>
 
-    <div class="checkbox-container">
-      <input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()"/>
-      <label for="mostrarOdds">Mostrar odds</label>
-    </div>
+		<div class="checkbox-container">
+			<input type="checkbox" id="mostrarOdds" onchange="toggleTableContent()"/>
+			<label for="mostrarOdds">Mostrar odds</label>
+		</div>
 
-    <div class="text-end">
-      <button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
-        Detectar Padrões
-      </button>
-    </div>
+		<div class="checkbox-container">
+			<input type="checkbox" id="mostrarRanks" onchange="toggleTableContentRank()"/>
+			<label for="mostrarRanks">Mostrar ranks</label>
+		</div>
 
-    <div id="gamesTableContainer" class="row mt-3">
-      <!-- Tabela será renderizada via JS -->
-    </div>
-  </div>
-</div>
+		<div class="text-end">
+			<button id="openModalButton" class="btn btn-inverse-success btn-fw" onclick="openModal()">
+				Detectar Padrões
+			</button>
+		</div>
+
+		<div id="teams_rank" class="row mt-3">
+			<!-- Essa porra reideriza o carai do rank -->
+		</div>
+
+		<div id="gamesTableContainer" class="row mt-3">
+			<!-- Tabela será renderizada via JS -->
+		</div>
+	</div>
 
 	<!-- MODAL -->
 	<div id="ligaModal" class="modal" style="display: none;">
@@ -195,50 +203,110 @@
 				green: data["green"][key],
 				assertividade: data["assertividade"][key]
 		}));
-}
+	}
 
-function toggleTableContent() {
-	// Get the state of the checkbox
-	const isChecked = document.getElementById("mostrarOdds").checked;
+	function toggleTableContent() {
+		// Get the state of the checkbox
+		const isChecked = document.getElementById("mostrarOdds").checked;
 
-	// Find all elements with the class "odds"
-	const oddsElements = document.querySelectorAll(".odds");
+		// Find all elements with the class "odds"
+		const oddsElements = document.querySelectorAll(".odds");
 
-	// Toggle the display of the odds based on the checkbox state
-	oddsElements.forEach((element) => {
-			element.style.display = isChecked ? "inline" : "none";
-	});
+		// Toggle the display of the odds based on the checkbox state
+		oddsElements.forEach((element) => {
+				element.style.display = isChecked ? "inline" : "none";
+		});
+	}
 
+	function toggleTableContentRank() {
+		// Get the state of the checkbox
+		const isChecked = document.getElementById("mostrarRanks").checked;
 	
-}
+		// Find all elements with the class "odds"
+		const oddsElements = document.querySelectorAll(".showRank");
+	
+		// Toggle the display of the odds based on the checkbox state
+		oddsElements.forEach((element) => {
+				element.style.display = isChecked ? "inline" : "none";
+		});
+	}
 
 </script>
 
 <script>
-	async function fetchData(leagueId) {
-    const mercado = document.getElementById('mercado').value;
-    const periodo = document.getElementById('periodo').value;
-		setUrl(leagueId)
-		
-    try {
-        const response = await fetch(`?campeonato=${leagueId}&mercado=${mercado}&periodo=${periodo}`, {
-					headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
+	async function renderRank(rank, isChecked){
+		const rankContainer = document.getElementById("teams_rank");
+		rankContainer.classList.add("showRank")
+		rankContainer.innerHTML = ""; // Limpa a tabela
 
-        if (!response.ok) {
-					throw new Error(`Erro na requisição: ${response.statusText}`);
-        }
-				
-        const games = await response.json();
-        renderTable(games, mercado, periodo);
-    } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-    }
+		rankContainer.style.display = isChecked ? "inline" : "none"
+
+		const table_rank = document.createElement("table");
+		table_rank.classList.add("table", "table-bordered");
+		const thead = document.createElement("thead");
+		thead.innerHTML = `
+		<tr>
+			<th>Time</th>
+			<th>Jogos</th>
+			<th>Pontos</th>
+			<th>Gols</th>
+			<th>Media de Gols</th>
+		</tr>
+		`;
+	table_rank.appendChild(thead);
+	const tbody = document.createElement("tbody");
+	rank.forEach((linha) => {
+		const row = document.createElement("tr");
+		row.innerHTML = `
+		<td>${linha.Time}</td>
+		<td>${linha.Jogos}</td>
+			<td>${linha.Pontos}</td>
+			<td>${linha.Gols}</td>
+			<td>${linha.MediaGols.toFixed(2)}</td>
+			`;
+			tbody.appendChild(row);
+		});
+	table_rank.appendChild(tbody);
+	
+	rankContainer.appendChild(table_rank);
 }
+</script>
+
+<script>
+	async function fetchData(leagueId) {
+		const mercado = document.getElementById('mercado').value;
+		const periodo = document.getElementById('periodo').value;
+		const isChecked = document.getElementById("mostrarRanks").checked;
+		setUrl(leagueId)
+			
+		try {
+			const response = await fetch(`?campeonato=${leagueId}&mercado=${mercado}&periodo=${periodo}`, {
+						headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			});
+
+			if (!response.ok) {
+						throw new Error(`Erro na requisição: ${response.statusText}`);
+			}
+					
+			const { json_result: games, rank } = await response.json();
+			renderTable(games, mercado, periodo);
+			renderRank(rank, isChecked)
+		} catch (error) {
+			console.error('Erro ao buscar dados:', error);
+		}
+	}
 
 	function loadFirstData(){
+		const currentUrl = window.location.href;
+
+		// Cria um objeto URL a partir da URL atual
+		const url = new URL(currentUrl);
+		
+		// Usa URLSearchParams para obter os parâmetros da URL
+		const params = new URLSearchParams(url.search);
+		const storedCampeonato = params.get('campeonato');
 		const mercadoSelect = document.getElementById("mercado");
-		setUrl(1)
+		setUrl(storedCampeonato)
 		
 		// Preenchendo opções de mercado dinamicamente
 		const mercados = [
@@ -250,7 +318,7 @@ function toggleTableContent() {
 			{ label: "HT", options: ["Empate"] },
 		];
 
-		// aqui nos seta o valor padrao
+	// aqui nos seta o valor padrao
     const selectedValue = "over_2.5"
 
 		mercados.forEach((group) => {
@@ -280,14 +348,15 @@ function toggleTableContent() {
 	document.addEventListener("DOMContentLoaded", () => {
 		const games = {{ games|tojson }}
 		const mercado = "{{ mercado }}"
+		const rank = {{ rank|tojson }}
 		const periodo = document.getElementById('periodo').value;
 		loadFirstData()
+		renderRank(rank, false)
 
 		renderTable(games, mercado, periodo);
 	});
 
 	function renderTable(games, mercado, periodo, isChecked) {
-		console.log(games)
 		const gamesContainer = document.getElementById("gamesTableContainer");
 
 		gamesContainer.innerHTML = ""; // Limpa a tabela
@@ -339,111 +408,113 @@ function toggleTableContent() {
 		gamesContainer.appendChild(table);
 	}
 
-// Função para verificar o resultado de acordo com o mercado selecionado
-function verifyResult(coluna, mercado) {
-	const isUnder = mercado.startsWith("under");
-	const threshold = parseFloat(mercado.split("_")[1]);
-	let isSuccess = false;
-	let processedOdds = null;
+	// Função para verificar o resultado de acordo com o mercado selecionado
+	function verifyResult(coluna, mercado) {
+		const isUnder = mercado.startsWith("under");
+		const threshold = parseFloat(mercado.split("_")[1]);
+		let isSuccess = false;
+		let processedOdds = null;
 
-	switch (true) {
-			case mercado.startsWith("over"):
-					isSuccess = coluna.soma_gols > threshold;
-					processedOdds = coluna.processed_odds[`o${threshold * 10}`];
-					break;
-			case mercado.startsWith("under"):
-					isSuccess = coluna.soma_gols < threshold;
-					processedOdds = coluna.processed_odds[`u${threshold * 10}`];
-					break;
-			case mercado.startsWith("ambas_marcam"):
-					isSuccess = 
-							(mercado.endsWith("sim") && coluna.ambas_marcam) ||
-							(mercado.endsWith("não") && !coluna.ambas_marcam);
-					processedOdds = mercado.endsWith("sim") ? coluna.processed_odds.ambs : coluna.processed_odds.ambn;
-					break;
-			case mercado.startsWith("par_ou_ímpar"):
-					isSuccess = 
-							(mercado.endsWith("_par") && coluna.par) || 
-							(mercado.endsWith("_ímpar") && !coluna.par);
-					break;
-			case mercado.startsWith("vencedor"):
-					isSuccess = 
-							(mercado.endsWith("casa_vence") && coluna.home_win) ||
-							(mercado.endsWith("fora_vence") && !coluna.home_win);
-					processedOdds = mercado.endsWith("casa_vence") ? coluna.processed_odds.ftc : coluna.processed_odds.ftv;
-					break;
-			case mercado.startsWith("ht"):
-					isSuccess = coluna.draw_ht;
-					processedOdds = coluna.processed_odds.hte;
-					break;
-			default:
-					break;
+		switch (true) {
+				case mercado.startsWith("over"):
+						isSuccess = coluna.soma_gols > threshold;
+						processedOdds = coluna.processed_odds[`o${threshold * 10}`];
+						break;
+				case mercado.startsWith("under"):
+						isSuccess = coluna.soma_gols < threshold;
+						processedOdds = coluna.processed_odds[`u${threshold * 10}`];
+						break;
+				case mercado.startsWith("ambas_marcam"):
+						isSuccess = 
+								(mercado.endsWith("sim") && coluna.ambas_marcam) ||
+								(mercado.endsWith("não") && !coluna.ambas_marcam);
+						processedOdds = mercado.endsWith("sim") ? coluna.processed_odds.ambs : coluna.processed_odds.ambn;
+						break;
+				case mercado.startsWith("par_ou_ímpar"):
+						isSuccess = 
+								(mercado.endsWith("_par") && coluna.par) || 
+								(mercado.endsWith("_ímpar") && !coluna.par);
+						break;
+				case mercado.startsWith("vencedor"):
+						isSuccess = 
+								(mercado.endsWith("casa_vence") && coluna.home_win) ||
+								(mercado.endsWith("fora_vence") && !coluna.home_win);
+						processedOdds = mercado.endsWith("casa_vence") ? coluna.processed_odds.ftc : coluna.processed_odds.ftv;
+						break;
+				case mercado.startsWith("ht"):
+						isSuccess = coluna.draw_ht;
+						processedOdds = coluna.processed_odds.hte;
+						break;
+				default:
+						break;
+		}
+
+		coluna.odd = processedOdds; // Adiciona as odds processadas à coluna
+		return isSuccess;
 	}
 
-	coluna.odd = processedOdds; // Adiciona as odds processadas à coluna
-	return isSuccess;
-}
+	function updateParams(){
+		const mercado = document.getElementById('mercado').value;
+		const periodo = document.getElementById('periodo').value;
+		const isChecked = document.getElementById("mostrarOdds").checked;
 
-function updateParams(){
-	const mercado = document.getElementById('mercado').value;
-	const periodo = document.getElementById('periodo').value;
-	const isChecked = document.getElementById("mostrarOdds").checked;
+		const games = {{ games|tojson}}
+		const rank = {{ rank|tojson }}
 
-	const games = {{ games|tojson}}
+		renderTable(games, mercado, periodo, isChecked)
+		renderRank(rank)
+	}
 
-	renderTable(games, mercado, periodo, isChecked)
-}
+	function setUrl(leagueId){
+		const url = new URL(window.location.href);
 
-function setUrl(leagueId){
-	const url = new URL(window.location.href);
+		url.searchParams.set('campeonato', leagueId);
+		window.history.pushState({}, '', url);
 
-	url.searchParams.set('campeonato', leagueId);
-	window.history.pushState({}, '', url);
-
-	return url
-}
+		return url
+	}
 </script>
 	
 <style>
 	/* Estilos do modal */
-.modal {
-	display: none; /* Inicialmente oculto */
-	position: fixed; /* Fica fixo na tela */
-	z-index: 1; /* Coloca o modal acima do conteúdo */
-	left: 0;
-	top: 0;
-	width: 100%; /* 100% da largura da tela */
-	height: 100%; /* 100% da altura da tela */
-	background-color: rgba(0, 0, 0, 0.4); /* Fundo semitransparente */
-}
+	.modal {
+		display: none; /* Inicialmente oculto */
+		position: fixed; /* Fica fixo na tela */
+		z-index: 1; /* Coloca o modal acima do conteúdo */
+		left: 0;
+		top: 0;
+		width: 100%; /* 100% da largura da tela */
+		height: 100%; /* 100% da altura da tela */
+		background-color: rgba(0, 0, 0, 0.4); /* Fundo semitransparente */
+	}
 
-/* Conteúdo do modal */
-.modal-content {
-	background-color: rgba(0, 0, 0, 0.8);
-	margin: 15% auto;
-	padding: 20px;
-	border: 1px solid #888;
-	width: 80%; 
-	color: aqua;
-}
+	/* Conteúdo do modal */
+	.modal-content {
+		background-color: rgba(0, 0, 0, 0.8);
+		margin: 15% auto;
+		padding: 20px;
+		border: 1px solid #888;
+		width: 80%; 
+		color: aqua;
+	}
 
-/* Botão de fechar (X) */
-.close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
-}
+	/* Botão de fechar (X) */
+	.close {
+		color: #aaa;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
 
-.close:hover,
-.close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
-}
-.odds {
-	font-size: small;
-	
-}
+	.close:hover,
+	.close:focus {
+		color: black;
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.odds {
+		font-size: small;
+		
+	}
 </style>
 {% endblock %}

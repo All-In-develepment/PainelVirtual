@@ -48,32 +48,54 @@
         </div>
       </div>
     </div>
+  </div>
+    
+  <!-- placar mais proximo de sair -->
+   <div class="grid-margin">
+    <div class="card">
+      <h4 class="card-header text-center">
+        Placar mais próximo de sair
+      </h4>
+      <div id="nearest-game-details" class="card-deck"></div>
+    </div>
+  </div>
 
-    <div class="row">
-      <div class="col-lg-6 grid-margin stretch-card">
-        <div class="card">
-          <div class="card-body">
-            <div id="team-a-details" class="table-responsive col-12"></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6 grid-margin stretch-card">
-        <div class="card">
-          <div class="card-body">
-            <div id="team-a-home-details" class="table-responsive col-12"></div>
-          </div>
+  <!-- time casa -->
+  <div class="row">
+    <div class="col-lg-6 grid-margin stretch-card">
+      <div class="card text-center">
+        <div class="card-body">
+          <div id="team-a-details" class="table-responsive col-12"></div>
         </div>
       </div>
     </div>
-
-    <div class="row">
-      <div class="col-lg-6 grid-margin stretch-card">
-      <div style="display: flex; justify-content: space-between;">
-        <div id="team-b-details" style="width: 45%;"></div>
-        <div id="team-b-home-details" style="width: 45%;"></div>
+    <div class="col-lg-6 grid-margin stretch-card">
+      <div class="card text-center">
+        <div class="card-body">
+          <div id="team-a-home-details" class="table-responsive col-12"></div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- time fora -->
+  <div class="row">
+    <div class="col-lg-6 grid-margin stretch-card">
+      <div class="card text-center">
+        <div class="card-body">
+          <div id="team-b-details" class="table-responsive col-12"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 grid-margin stretch-card">
+      <div class="card text-center">
+        <div class="card-body">
+          <div id="team-b-home-details" class="table-responsive col-12"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -163,6 +185,7 @@ function showGameDetails(teamA, teamB, horario) {
   document.getElementById('team-b-home-details').innerHTML = '';
   document.getElementById('team-a-statistics').innerHTML = '';
   document.getElementById('team-a-home-statistics').innerHTML = '';
+
   
   // Aqui, leagueId já está atualizado
   fetch(`/kirongames/get_game_details/${teamA}/${teamB}?campeonato=${campeonatoValue}`)
@@ -170,30 +193,122 @@ function showGameDetails(teamA, teamB, horario) {
     .then(data => {
       // Adiciona título para Time A com jogos gerais
       document.getElementById('team-a-details').innerHTML = 
-          `<h3 class="centered">${teamA} - Geral</h3>` + generateTable(data.teamA_all);
+          `<h3 class="card-header">${teamA} - Geral</h3>` + generateTable(data.teamA_all);
       
       // Adiciona título para Time A com jogos em casa
       document.getElementById('team-a-home-details').innerHTML = 
-          `<h3 class="centered">${teamA} em casa</h3>` + generateTable(data.teamA);
+          `<h3 class="card-header">${teamA} em casa</h3>` + generateTable(data.teamA);
 
       // Adiciona título para Time B com jogos gerais
       document.getElementById('team-b-details').innerHTML = 
-          `<h3 class="centered">${teamB} - Geral</h3>` + generateTable(data.teamB_all);
+          `<h3 class="card-header">${teamB} - Geral</h3>` + generateTable(data.teamB_all);
 
       // Adiciona título para Time B com jogos em casa
       document.getElementById('team-b-home-details').innerHTML = 
-          `<h3 class="centered">${teamB} em casa</h3>` + generateTable(data.teamB);
+          `<h3 class="card-header">${teamB} em casa</h3>` + generateTable(data.teamB);
 
       // Adiciona estastísticas dos jogos em casa
       document.getElementById('team-a-home-statistics').innerHTML = 
-          `<h3 class="centered">${teamA} em casa</h3>` + generateTableDetails(data.teams_details_data, teamA, teamB);
+          `<h3 class="card-header">${teamA} em casa</h3>` + generateTableDetails(data.teams_details_data, teamA, teamB);
       
       // Adiciona estastísticas geral
       document.getElementById('team-a-statistics').innerHTML = 
-      `<h3 class="centered">Geral</h3>` + generateTableDetails(data.head_to_head_data, teamA, teamB);
+      `<h3 class="card-header">Geral</h3>` + generateTableDetails(data.head_to_head_data, teamA, teamB);
+
+      // Adiciona proximos placares
+      generateNearestCards(data.score_stats);
       
     });
 }
+
+function generateNearestCards(nearest_games) {
+  console.log(nearest_games);
+
+  const nearest_game_details = document.getElementById('nearest-game-details');
+
+  // Limpar o conteúdo anterior
+  nearest_game_details.innerHTML = '';
+
+  // Iterar sobre as propriedades do objeto nearest_games
+  for (const result in nearest_games) {
+    if (nearest_games.hasOwnProperty(result)) {
+      const data = nearest_games[result];
+
+      // Criar o card
+      const card = document.createElement('div');
+      card.classList.add('card', 'd-inline-block', 'mb-3');
+
+      // Corpo do card
+      const cardBody = document.createElement('div');
+      cardBody.classList.add('card-body');
+
+      // Título do card
+      const h5 = document.createElement('h5');
+      h5.classList.add('card-title');
+      h5.textContent = result;
+
+      // Calcular a porcentagem
+      const progressValuePercentage = (data.current_without_appearance / data.max_without_appearance) * 100;
+
+      // Criar a barra de progresso
+      const progressBarContainer = document.createElement("div");
+      progressBarContainer.classList.add("progress");
+      progressBarContainer.style.height = '30px'; // Aumenta a altura da barra de progresso
+      progressBarContainer.style.width = '50px'; // Aumenta a largura da barra de progresso
+
+      // Definir a classe de acordo com a porcentagem
+      let background = '';
+      if (progressValuePercentage > 80) {
+        background = "bg-success";
+      } else if (progressValuePercentage >= 40 && progressValuePercentage <= 80) {
+        background = "bg-warning";
+      } else {
+        background = "bg-danger";
+      }
+
+      // Criar a barra de progresso
+      const progressBar = document.createElement("div");
+      progressBar.classList.add("progress-bar", background);
+      progressBar.setAttribute("role", "progressbar");
+      progressBar.style.width = `${progressValuePercentage}%`;
+      progressBar.setAttribute("aria-valuenow", data.current_without_appearance);
+      progressBar.setAttribute("aria-valuemin", "0");
+      progressBar.setAttribute("aria-valuemax", data.max_without_appearance);
+
+      // Criar o texto de progresso dentro da barra
+      const progressText = document.createElement("div");
+      progressText.classList.add("custom-progress-value");
+      progressText.textContent = `${data.current_without_appearance}/${data.max_without_appearance}`;
+
+      // Estilizar o texto para ficar dentro da barra de progresso
+      progressText.style.position = 'absolute';
+      progressText.style.left = '50%';
+      progressText.style.transform = 'translateX(-50%)';
+      progressText.style.color = 'white';  // Para o texto ser visível dentro da barra de progresso
+
+      // Garantir que o contêiner da barra de progresso tenha posição relativa
+      progressBarContainer.style.position = 'relative'; // Necessário para que o texto fique dentro da barra
+
+      // Adicionar a barra de progresso ao container
+      progressBarContainer.appendChild(progressBar);
+
+      // Adicionar o texto dentro da barra de progresso
+      progressBar.appendChild(progressText);
+
+      // Organizar a estrutura do card
+      cardBody.appendChild(h5);
+      cardBody.appendChild(progressBarContainer);  // Barra de progresso abaixo do título
+
+      // Adicionar o corpo do card ao card
+      card.appendChild(cardBody);
+
+      // Adicionar o card ao contêiner principal
+      nearest_game_details.appendChild(card);
+    }
+  }
+}
+
+
 
 function generateTableDetails(teams_details, teamA, teamB){
   // Inicializando contadores

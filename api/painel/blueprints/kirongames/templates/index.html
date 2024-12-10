@@ -353,10 +353,65 @@
 		const periodo = document.getElementById('periodo').value;
 		loadFirstData()
 		renderRank(rank, false)
-
+		
 		renderTable(games, mercado, periodo);
+		highlighting()
 	});
 
+	function highlighting() {
+		const table = document.getElementById("score-table");
+	
+		// Objeto para armazenar as cores dos valores destacados
+		const colorMap = {};
+	
+		// Função para gerar uma cor aleatória
+		function getRandomColor() {
+			const letters = "0123456789ABCDEF";
+			let color = "#";
+			for (let i = 0; i < 6; i++) {
+				color += letters[Math.floor(Math.random() * 16)];
+			}
+			return color;
+		}
+	
+		// Adicionar evento de clique a cada célula
+		table.addEventListener("click", function (event) {
+			// Verificar se a célula clicada é uma célula de tabela (td)
+			if (event.target.tagName === "TD") {
+				// Obter o valor clicado
+				const clickedValue = event.target.firstChild.textContent.trim();
+	
+				// Criar uma classe única para este valor
+				const highlightClass = `highlight-${clickedValue.replace(/\s/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}`;
+	
+				// Se ainda não existe uma cor para este valor, gerar e armazenar
+				if (!colorMap[clickedValue]) {
+					colorMap[clickedValue] = getRandomColor();
+				}
+	
+				// Destacar todas as células que têm o mesmo valor
+				const allCells = table.getElementsByTagName("td");
+				for (let cell of allCells) {
+					// Obter apenas o texto principal da célula, ignorando tags internas
+					const cellMainText = Array.from(cell.childNodes)
+						.filter(node => node.nodeType === Node.TEXT_NODE) // Apenas nós de texto
+						.map(node => node.textContent.trim()) // Obter o texto e remover espaços
+						.join(""); // Combinar caso haja múltiplos nós
+	
+					// Comparar com o valor clicado
+					if (cellMainText === clickedValue) {
+						// Adicionar a classe de destaque única
+						cell.classList.add(highlightClass);
+	
+						// Aplicar a cor do destaque diretamente no estilo inline
+						cell.style.outline = `2px solid ${colorMap[clickedValue]}`; // Usar a cor aleatória
+						cell.style.outlineOffset = "2px"; // Ajustar o espaçamento do contorno
+					}
+				}
+			}
+		});
+	}
+	
 	function renderTable(games, mercado, periodo, isChecked) {
 		const gamesContainer = document.getElementById("gamesTableContainer");
 	
@@ -375,6 +430,7 @@
 	
 		const table = document.createElement("table");
 		table.classList.add("table", "table-bordered");
+		table.setAttribute("id", "score-table")
 	
 		// Cabeçalho
 		const thead = document.createElement("thead");
@@ -390,7 +446,6 @@
 	
 		gamesToShow.forEach((linha, index) => {
 			const row = document.createElement("tr");
-			console.log(linha.Colunas);
 			let linhaPorcentagem = 0; // Porcentagem de greens na linha atual
 			let totalGols = 0; // Contador de gols da linha atual
 			const cols = linha.Colunas.map((coluna) => {
@@ -442,9 +497,6 @@
 		table.appendChild(tbody);
 		gamesContainer.appendChild(table);
 	}
-	
-	
-	
 
 	// Função para verificar o resultado de acordo com o mercado selecionado
 	function verifyResult(coluna, mercado) {
@@ -553,6 +605,11 @@
 	.odds {
 		font-size: small;
 		
+	}
+
+	.highlight {
+		outline: 2px solid yellow; /* Borda para indicar destaque */
+  	outline-offset: 2px;
 	}
 </style>
 {% endblock %}

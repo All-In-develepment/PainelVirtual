@@ -306,11 +306,23 @@ function toggleTableContent() {
 		const table = document.createElement("table");
 		table.classList.add("table", "table-bordered");
 	
+		// Inicializar array de contadores para cada coluna
+		const colunaAcertos = Array(games.Minutos.length).fill(0);
+		const colunaTotais = Array(games.Minutos.length).fill(0);
+	
 		// Cabeçalho
 		const thead = document.createElement("thead");
+	
+		// Linha de títulos das colunas
 		const headerRow = document.createElement("tr");
 		headerRow.innerHTML = `<th>#</th>${games.Minutos.map((m) => `<th>${m.Numero}</th>`).join("")}<th>P</th><th>P/5</th><th>Gols</th>`;
 		thead.appendChild(headerRow);
+	
+		// Linha de porcentagens por coluna
+		const porcentagemRow = document.createElement("tr");
+		porcentagemRow.innerHTML = `<th>%</th>${games.Minutos.map(() => `<th>0%</th>`).join("")}<th></th><th></th><th></th>`;
+		thead.appendChild(porcentagemRow);
+	
 		table.appendChild(thead);
 	
 		// Corpo
@@ -320,19 +332,23 @@ function toggleTableContent() {
 	
 		gamesToShow.forEach((linha, index) => {
 			const row = document.createElement("tr");
-			console.log(linha.Colunas);
 			let linhaPorcentagem = 0; // Porcentagem de greens na linha atual
 			let totalGols = 0; // Contador de gols da linha atual
-			const cols = linha.Colunas.map((coluna) => {
+	
+			const cols = linha.Colunas.map((coluna, colIndex) => {
 				if (!coluna.Resultado) return `<td></td>`;
 	
 				const isSuccess = verifyResult(coluna, mercado);
 	
-				// Calcular porcentagem para coluna P
-				linhaPorcentagem += isSuccess ? 1 : 0; // 1 ponto por green
+				// Atualizar acertos e totais para a coluna
+				colunaAcertos[colIndex] += isSuccess ? 1 : 0;
+				colunaTotais[colIndex]++;
+	
+				// Calcular porcentagem para a linha
+				linhaPorcentagem += isSuccess ? 1 : 0;
 	
 				// Somar gols para a coluna Gols
-				const gols = parseInt(coluna.soma_gols || 0, 10); // Verifica e adiciona os gols, se houver
+				const gols = parseInt(coluna.soma_gols || 0, 10);
 				totalGols += gols;
 	
 				return `
@@ -369,9 +385,50 @@ function toggleTableContent() {
 			tbody.appendChild(row);
 		});
 	
+		// Atualizar porcentagens no cabeçalho
+		const porcentagensHTML = colunaAcertos
+			.map((acertos, index) => {
+				const total = colunaTotais[index];
+				const percentColuna = total > 0 ? ((acertos / total) * 100).toFixed(2) : "0.00";
+				return `<th>${percentColuna}%</th>`;
+			})
+			.join("");
+
+
+
+
+		// Adicionar lógica para P/C/5 (média a cada 5 colunas)
+		let blocoPC5Sum = 0; // Soma acumulada para bloco de 5 colunas
+		let blocoPC5Count = 0; // Contador de colunas no bloco
+		const pc5HTML = colunaAcertos
+			.map((_, index) => {
+				const total = colunaTotais[index];
+				const percentColuna = total > 0 ? ((colunaAcertos[index] / total) * 100) : 0;
+				blocoPC5Sum += percentColuna;
+				blocoPC5Count++;
+
+				const isEndOfBlock = (index + 1) % 5 === 0 || index === colunaAcertos.length - 1;
+				if (isEndOfBlock) {
+					const blocoPC5Media = (blocoPC5Sum / blocoPC5Count).toFixed(2);
+					blocoPC5Sum = 0;
+					blocoPC5Count = 0;
+					return `<th>${blocoPC5Media}%</th>`;
+				}
+				return "<th></th>";
+			})
+			.join("");
+			
+
+			porcentagemRow.innerHTML = `<tr>
+			<th>P/C</th>
+			<th>${porcentagensHTML}</th></tr>`
+			
+			//porcentagemRow.innerHTML = `<tr><th colspan = "5">${pc5HTML}</th></tr>`;
+	
 		table.appendChild(tbody);
 		gamesContainer.appendChild(table);
 	}
+	
 	
 	
 	

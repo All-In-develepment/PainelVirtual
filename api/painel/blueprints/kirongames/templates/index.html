@@ -50,6 +50,12 @@
 			</button>
 		</div>
 
+		<div class="text-end">
+			<button id="uncheck" class="btn btn-inverse-success btn-fw">
+				Desmarcar todos
+			</button>
+		</div>
+
 		<div id="teams_rank" class="row mt-3">
 			<!-- Essa porra reideriza o carai do rank -->
 		</div>
@@ -277,7 +283,8 @@
 	async function fetchData(leagueId) {
 		const mercado = document.getElementById('mercado').value;
 		const periodo = document.getElementById('periodo').value;
-		const isChecked = document.getElementById("mostrarRanks").checked;
+		const isCheckedRanks = document.getElementById("mostrarRanks").checked;
+		const isCheckedOdds = document.getElementById("mostrarOdds").checked;
 		setUrl(leagueId)
 			
 		try {
@@ -290,8 +297,9 @@
 			}
 					
 			const { json_result: games, rank } = await response.json();
-			renderTable(games, mercado, periodo);
-			renderRank(rank, isChecked)
+			renderTable(games, mercado, periodo, isCheckedOdds);
+			renderRank(rank, isCheckedRanks)
+			highlight()
 		} catch (error) {
 			console.error('Erro ao buscar dados:', error);
 		}
@@ -355,61 +363,88 @@
 		renderRank(rank, false)
 		
 		renderTable(games, mercado, periodo);
-		highlighting()
+		highlight()
 	});
 
-	function highlighting() {
+	function highlight() {
 		const table = document.getElementById("score-table");
-	
-		// Objeto para armazenar as cores dos valores destacados
-		const colorMap = {};
+		const colorMap = {}; // Objeto para armazenar as cores dos valores destacados
 	
 		// Função para gerar uma cor aleatória
 		function getRandomColor() {
-			const letters = "0123456789ABCDEF";
-			let color = "#";
-			for (let i = 0; i < 6; i++) {
-				color += letters[Math.floor(Math.random() * 16)];
+			let hue;
+			while (true) {
+				hue = Math.floor(Math.random() * 360); // Gera um valor de matiz aleatório
+				// Evitar os intervalos de vermelho (0-30, 330-360) e verde (90-150)
+				if (!((hue >= 0 && hue <= 30) || (hue >= 330 && hue <= 360) || (hue >= 90 && hue <= 150))) {
+					break;
+				}
 			}
-			return color;
+			const saturation = 80 + Math.random() * 20; // Saturação (80-100%)
+			const lightness = 40 + Math.random() * 20; // Luminosidade (40-60%)
+			return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+		}
+	
+		// Função para remover todos os destaques
+		function removeAllHighlights() {
+			const highlightedCells = table.querySelectorAll("[style]");
+			highlightedCells.forEach(cell => {
+				cell.style.outline = ""; // Remove o contorno
+				cell.style.outlineOffset = ""; // Remove o espaçamento do contorno
+			});
 		}
 	
 		// Adicionar evento de clique a cada célula
 		table.addEventListener("click", function (event) {
-			// Verificar se a célula clicada é uma célula de tabela (td)
 			if (event.target.tagName === "TD") {
-				// Obter o valor clicado
-				const clickedValue = event.target.firstChild.textContent.trim();
+				const clickedCell = event.target;
+				const clickedValue = clickedCell.firstChild.textContent.trim();
 	
 				// Criar uma classe única para este valor
 				const highlightClass = `highlight-${clickedValue.replace(/\s/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}`;
 	
-				// Se ainda não existe uma cor para este valor, gerar e armazenar
-				if (!colorMap[clickedValue]) {
-					colorMap[clickedValue] = getRandomColor();
-				}
+				// Se o elemento já estiver destacado, removê-lo
+				if (clickedCell.style.outline) {
+					// Remover destaque da célula
+					const allCells = table.getElementsByTagName("td");
+					for (let cell of allCells) {
+						const cellMainText = Array.from(cell.childNodes)
+							.filter(node => node.nodeType === Node.TEXT_NODE)
+							.map(node => node.textContent.trim())
+							.join("");
+						if (cellMainText === clickedValue) {
+							cell.style.outline = ""; // Remove o contorno
+							cell.style.outlineOffset = ""; // Remove o espaçamento do contorno
+						}
+					}
+				} else {
+					// Gerar uma cor para o valor se ainda não existir
+					if (!colorMap[clickedValue]) {
+						colorMap[clickedValue] = getRandomColor();
+					}
 	
-				// Destacar todas as células que têm o mesmo valor
-				const allCells = table.getElementsByTagName("td");
-				for (let cell of allCells) {
-					// Obter apenas o texto principal da célula, ignorando tags internas
-					const cellMainText = Array.from(cell.childNodes)
-						.filter(node => node.nodeType === Node.TEXT_NODE) // Apenas nós de texto
-						.map(node => node.textContent.trim()) // Obter o texto e remover espaços
-						.join(""); // Combinar caso haja múltiplos nós
-	
-					// Comparar com o valor clicado
-					if (cellMainText === clickedValue) {
-						// Adicionar a classe de destaque única
-						cell.classList.add(highlightClass);
-	
-						// Aplicar a cor do destaque diretamente no estilo inline
-						cell.style.outline = `2px solid ${colorMap[clickedValue]}`; // Usar a cor aleatória
-						cell.style.outlineOffset = "2px"; // Ajustar o espaçamento do contorno
+					// Adicionar destaque a todas as células com o mesmo valor
+					const allCells = table.getElementsByTagName("td");
+					for (let cell of allCells) {
+						const cellMainText = Array.from(cell.childNodes)
+							.filter(node => node.nodeType === Node.TEXT_NODE)
+							.map(node => node.textContent.trim())
+							.join("");
+						if (cellMainText === clickedValue) {
+							cell.style.outline = `2px solid ${colorMap[clickedValue]}`;
+							cell.style.outlineOffset = "2px";
+						}
 					}
 				}
 			}
 		});
+	
+		// Criar botão "Desmarcar Todos"
+		const button = document.getElementById("uncheck");
+		button.textContent = "Desmarcar Todos";
+		button.classList.add("mt-2");
+		button.addEventListener("click", removeAllHighlights);
+		document.body.insertBefore(button, table);
 	}
 	
 	function renderTable(games, mercado, periodo, isChecked) {
@@ -461,7 +496,7 @@
 				totalGols += gols;
 	
 				return `
-					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center">
+					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center; cursor: pointer">
 						${coluna.Resultado}
 						${coluna.odd ? `<br><span class="odds" style=${isChecked ? "'display: inline'" : "'display: none'"}>odd: ${coluna.odd}</span>` : ""}
 					</td>`;
@@ -605,11 +640,6 @@
 	.odds {
 		font-size: small;
 		
-	}
-
-	.highlight {
-		outline: 2px solid yellow; /* Borda para indicar destaque */
-  	outline-offset: 2px;
 	}
 </style>
 {% endblock %}

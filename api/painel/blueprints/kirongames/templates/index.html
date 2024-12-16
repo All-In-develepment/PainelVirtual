@@ -287,7 +287,6 @@ function toggleTableContent() {
 	});
 
 	function renderTable(games, mercado, periodo, isChecked) {
-		console.log(games);
 		const gamesContainer = document.getElementById("gamesTableContainer");
 	
 		gamesContainer.innerHTML = ""; // Limpa a tabela
@@ -317,13 +316,6 @@ function toggleTableContent() {
 		const headerRow = document.createElement("tr");
 		headerRow.innerHTML = `<th>#</th>${games.Minutos.map((m) => `<th>${m.Numero}</th>`).join("")}<th>P</th><th>P/5</th><th>Gols</th>`;
 		thead.appendChild(headerRow);
-	
-		// Linha de porcentagens por coluna
-		const porcentagemRow = document.createElement("tr");
-		porcentagemRow.innerHTML = `<th>%</th>${games.Minutos.map(() => `<th>0%</th>`).join("")}<th></th><th></th><th></th>`;
-		thead.appendChild(porcentagemRow);
-	
-		table.appendChild(thead);
 	
 		// Corpo
 		const tbody = document.createElement("tbody");
@@ -386,48 +378,40 @@ function toggleTableContent() {
 		});
 	
 		// Atualizar porcentagens no cabeçalho
-		const porcentagensHTML = colunaAcertos
-			.map((acertos, index) => {
-				const total = colunaTotais[index];
-				const percentColuna = total > 0 ? ((acertos / total) * 100).toFixed(2) : "0.00";
-				return `<th>${percentColuna}%</th>`;
-			})
-			.join("");
-
-
-
-
-		// Adicionar lógica para P/C/5 (média a cada 5 colunas)
-		let blocoPC5Sum = 0; // Soma acumulada para bloco de 5 colunas
-		let blocoPC5Count = 0; // Contador de colunas no bloco
-		const pc5HTML = colunaAcertos
-			.map((_, index) => {
-				const total = colunaTotais[index];
-				const percentColuna = total > 0 ? ((colunaAcertos[index] / total) * 100) : 0;
-				blocoPC5Sum += percentColuna;
-				blocoPC5Count++;
-
-				const isEndOfBlock = (index + 1) % 5 === 0 || index === colunaAcertos.length - 1;
-				if (isEndOfBlock) {
-					const blocoPC5Media = (blocoPC5Sum / blocoPC5Count).toFixed(2);
-					blocoPC5Sum = 0;
-					blocoPC5Count = 0;
-					return `<th>${blocoPC5Media}%</th>`;
-				}
-				return "<th></th>";
-			})
-			.join("");
-			
-
-			porcentagemRow.innerHTML = `<tr>
-			<th>P/C</th>
-			<th>${porcentagensHTML}</th></tr>`
-			
-			//porcentagemRow.innerHTML = `<tr><th colspan = "5">${pc5HTML}</th></tr>`;
+		const pcRow = document.createElement("tr");
+		pcRow.innerHTML = `<th>P/C</th>${colunaAcertos.map((acertos, index) => {
+			const total = colunaTotais[index];
+			const percentColuna = total > 0 ? ((acertos / total) * 100).toFixed(2) : "0.00";
+			return `<th>${percentColuna}%</th>`;
+		}).join("")}<th></th><th></th><th></th>`;
 	
+		const pc5Row = document.createElement("tr");
+		let blocoPC5Sum = 0;
+		let blocoPC5Count = 0;
+		pc5Row.innerHTML = `<th>P/C/5</th>${colunaAcertos.map((_, index) => {
+			const total = colunaTotais[index];
+			const percentColuna = total > 0 ? (colunaAcertos[index] / total) * 100 : 0;
+	
+			blocoPC5Sum += percentColuna;
+			blocoPC5Count++;
+	
+			const isEndOfBlock = (index + 1) % 5 === 0 || index === colunaAcertos.length - 1;
+			if (isEndOfBlock) {
+				const blocoPC5Media = (blocoPC5Sum / blocoPC5Count).toFixed(2);
+				blocoPC5Sum = 0;
+				blocoPC5Count = 0;
+				return `<th>${blocoPC5Media}%</th>`;
+			}
+			return "<th></th>";
+		}).join("")}<th></th><th></th><th></th>`;
+	
+		thead.appendChild(pcRow);
+		thead.appendChild(pc5Row);
+		table.appendChild(thead);
 		table.appendChild(tbody);
 		gamesContainer.appendChild(table);
 	}
+	
 	
 	
 	

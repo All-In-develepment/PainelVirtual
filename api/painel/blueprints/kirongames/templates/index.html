@@ -592,7 +592,7 @@
 
 	function setUrl(leagueId){
 		const url = new URL(window.location.href);
-
+		leagueId = leagueId ? leagueId : 1
 		url.searchParams.set('campeonato', leagueId);
 		window.history.pushState({}, '', url);
 

@@ -101,19 +101,21 @@
 																storedMercadoChoice.split("_")[1] : null,
 			"ambas_sim": storedMercadoChoice.includes("sim") ? 
 																storedMercadoChoice.split("_")[2] : null,
-			"ambas_nao": storedMercadoChoice.includes("nao") ? 
+			"ambas_nao": storedMercadoChoice.includes("não") ? 
 																storedMercadoChoice.split("_")[2] : null,
-			"par": storedMercadoChoice.includes("par") ? 
+			"par": storedMercadoChoice.endsWith("_par") ? 
 																storedMercadoChoice : null,
-			"impar": storedMercadoChoice.includes("impar") ? 
+			"impar": storedMercadoChoice.endsWith("_ímpar") ? 
 																storedMercadoChoice : null,
-			"home_win": storedMercadoChoice.includes("home") ? 
+			"home_win": storedMercadoChoice.endsWith("casa_vence") ? 
 																storedMercadoChoice : null,
-			"away_win": storedMercadoChoice.includes("away") ? 
+			"away_win": storedMercadoChoice.endsWith("fora_vence") ? 
 																storedMercadoChoice : null,
-			"draw_ht": storedMercadoChoice.includes("draw_ht") ? 
+			"draw_ht": storedMercadoChoice.startsWith("ht") ? 
 																storedMercadoChoice : null
 		}
+
+		console.log({data})
 
 		// Define o nome do campeonato baseado no ID
 		let campeonatoNome = '';

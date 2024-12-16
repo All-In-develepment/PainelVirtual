@@ -413,7 +413,9 @@ def auto_search():
                         soma_coluna_0 = score_1 + score_2
                         if home_win or away_win:
                             coluna_0 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_0 = f'{score_1} {operator} 0 and {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_0 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_0 = f'{score_1_ht} {operator} {score_2_ht}'
@@ -433,7 +435,9 @@ def auto_search():
                         soma_coluna_1 = score_1 + score_2
                         if home_win or away_win:
                             coluna_1 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_1 = f'{score_1} {operator} 0 or {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_1 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_1 = f'{score_1_ht} {operator} {score_2_ht}'
@@ -452,7 +456,9 @@ def auto_search():
                         soma_coluna_2 = score_1 + score_2
                         if home_win or away_win:
                             coluna_2 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_2 = f'{score_1} {operator} 0 or {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_2 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_2 = f'{score_1_ht} {operator} {score_2_ht}'

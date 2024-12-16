@@ -413,7 +413,9 @@ def auto_search():
                         soma_coluna_0 = score_1 + score_2
                         if home_win or away_win:
                             coluna_0 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_0 = f'{score_1} {operator} 0 and {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_0 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_0 = f'{score_1_ht} {operator} {score_2_ht}'
@@ -433,7 +435,9 @@ def auto_search():
                         soma_coluna_1 = score_1 + score_2
                         if home_win or away_win:
                             coluna_1 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_1 = f'{score_1} {operator} 0 or {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_1 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_1 = f'{score_1_ht} {operator} {score_2_ht}'
@@ -452,7 +456,9 @@ def auto_search():
                         soma_coluna_2 = score_1 + score_2
                         if home_win or away_win:
                             coluna_2 = f'{score_1} {operator} {score_2}'
-                        elif ambas_nao or ambas_sim:
+                        elif ambas_sim:
+                            coluna_2 = f'{score_1} {operator} 0 or {score_2} {operator} 0'
+                        elif ambas_nao:
                             coluna_2 = f'{score_1} == 0 or {score_2} == 0'
                         elif draw_ht:
                             coluna_2 = f'{score_1_ht} {operator} {score_2_ht}'
@@ -552,7 +558,7 @@ def auto_search():
 
 @kirongames.route('/next-games')
 def next_games():
-    periodo = request.args.get('periodo', 72)
+    periodo = request.args.get('periodo', 24)
     liga = request.args.get('campeonato', '1')
     
     try:
@@ -578,7 +584,7 @@ def next_games():
 
 @kirongames.route('/get_game_details/<team_a>/<team_b>')
 def get_game_details(team_a, team_b):
-    periodo = request.args.get('periodo', 72)
+    periodo = request.args.get('periodo', 24)
     liga = request.args.get('campeonato', '1')
     try:
         response = get_api_data(liga, periodo)
@@ -594,6 +600,8 @@ def get_game_details(team_a, team_b):
             
             # Organize games into the respective dictionaries
             games_by_team, _, all_games_by_team = organize_games_by_team(games_data)
+
+            nearest_games_details = nearest_games(all_games_by_team) 
             
             limit_last_games(games_by_team)
             limit_last_games(all_games_by_team)
@@ -617,6 +625,7 @@ def get_game_details(team_a, team_b):
                 'teamB_all': team_b_all_data,
                 'teams_details_data': teams_details_data,
                 'head_to_head_data': head_to_head_data,
+                'score_stats': nearest_games_details
             })
     except requests.exceptions.RequestException as e:
         flash(f'Ocorreu um erro ao se conectar à API: {str(e)}', 'danger')
@@ -625,7 +634,7 @@ def get_game_details(team_a, team_b):
     
 @kirongames.route('/get-games', methods=['GET'])
 def get_games():
-    periodo = request.args.get('periodo', 72)
+    periodo = request.args.get('periodo', 24)
     liga = request.args.get('campeonato', '1')
     
     try:
@@ -685,3 +694,36 @@ def create_dataframe(games_data):
     df_ht = df_ht.sort_index(axis=1)
     
     return df, df_ht
+
+def nearest_games(nearest):
+    """"get score by a filter"""
+    # Inicializa um dicionário para estatísticas de cada resultado
+    score_stats = {}
+
+    # Iterar por todas as entradas do dicionário
+    for _, matches in nearest.items():
+        for match in matches:
+            resultado = match["Resultado"]
+            
+            # Atualiza ou inicializa as estatísticas do resultado
+            if resultado not in score_stats:
+                score_stats[resultado] = {
+                    "total_appearance": 0,
+                    "current_without_appearance": 0,
+                    "max_without_appearance": 0,
+                }
+            
+            # Atualiza as ocorrências de outros resultados como "não apareceu"
+            for other_result in score_stats:
+                if other_result != resultado:
+                    score_stats[other_result]["current_without_appearance"] += 1
+                    score_stats[other_result]["max_without_appearance"] = max(
+                        score_stats[other_result]["max_without_appearance"],
+                        score_stats[other_result]["current_without_appearance"]
+                    )
+            
+            # Reseta o contador de "não apareceu" e incrementa o total de aparições do resultado atual
+            score_stats[resultado]["current_without_appearance"] = 0
+            score_stats[resultado]["total_appearance"] += 1
+            
+    return score_stats

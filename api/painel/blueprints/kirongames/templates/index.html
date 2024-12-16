@@ -50,6 +50,12 @@
 			</button>
 		</div>
 
+		<div class="text-end">
+			<button id="uncheck" class="btn btn-inverse-success btn-fw">
+				Desmarcar todos
+			</button>
+		</div>
+
 		<div id="teams_rank" class="row mt-3">
 			<!-- Essa porra reideriza o carai do rank -->
 		</div>
@@ -95,17 +101,17 @@
 																storedMercadoChoice.split("_")[1] : null,
 			"ambas_sim": storedMercadoChoice.includes("sim") ? 
 																storedMercadoChoice.split("_")[2] : null,
-			"ambas_nao": storedMercadoChoice.includes("nao") ? 
+			"ambas_nao": storedMercadoChoice.includes("não") ? 
 																storedMercadoChoice.split("_")[2] : null,
-			"par": storedMercadoChoice.includes("par") ? 
+			"par": storedMercadoChoice.endsWith("_par") ? 
 																storedMercadoChoice : null,
-			"impar": storedMercadoChoice.includes("impar") ? 
+			"impar": storedMercadoChoice.endsWith("_ímpar") ? 
 																storedMercadoChoice : null,
-			"home_win": storedMercadoChoice.includes("home") ? 
+			"home_win": storedMercadoChoice.endsWith("casa_vence") ? 
 																storedMercadoChoice : null,
-			"away_win": storedMercadoChoice.includes("away") ? 
+			"away_win": storedMercadoChoice.endsWith("fora_vence") ? 
 																storedMercadoChoice : null,
-			"draw_ht": storedMercadoChoice.includes("draw_ht") ? 
+			"draw_ht": storedMercadoChoice.startsWith("ht") ? 
 																storedMercadoChoice : null
 		}
 
@@ -277,7 +283,8 @@
 	async function fetchData(leagueId) {
 		const mercado = document.getElementById('mercado').value;
 		const periodo = document.getElementById('periodo').value;
-		const isChecked = document.getElementById("mostrarRanks").checked;
+		const isCheckedRanks = document.getElementById("mostrarRanks").checked;
+		const isCheckedOdds = document.getElementById("mostrarOdds").checked;
 		setUrl(leagueId)
 			
 		try {
@@ -290,8 +297,9 @@
 			}
 					
 			const { json_result: games, rank } = await response.json();
-			renderTable(games, mercado, periodo);
-			renderRank(rank, isChecked)
+			renderTable(games, mercado, periodo, isCheckedOdds);
+			renderRank(rank, isCheckedRanks)
+			highlight()
 		} catch (error) {
 			console.error('Erro ao buscar dados:', error);
 		}
@@ -353,10 +361,92 @@
 		const periodo = document.getElementById('periodo').value;
 		loadFirstData()
 		renderRank(rank, false)
-
+		
 		renderTable(games, mercado, periodo);
+		highlight()
 	});
 
+	function highlight() {
+		const table = document.getElementById("score-table");
+		const colorMap = {}; // Objeto para armazenar as cores dos valores destacados
+	
+		// Função para gerar uma cor aleatória
+		function getRandomColor() {
+			let hue;
+			while (true) {
+				hue = Math.floor(Math.random() * 360); // Gera um valor de matiz aleatório
+				// Evitar os intervalos de vermelho (0-30, 330-360) e verde (90-150)
+				if (!((hue >= 0 && hue <= 30) || (hue >= 330 && hue <= 360) || (hue >= 90 && hue <= 150))) {
+					break;
+				}
+			}
+			const saturation = 80 + Math.random() * 20; // Saturação (80-100%)
+			const lightness = 40 + Math.random() * 20; // Luminosidade (40-60%)
+			return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+		}
+	
+		// Função para remover todos os destaques
+		function removeAllHighlights() {
+			const highlightedCells = table.querySelectorAll("[style]");
+			highlightedCells.forEach(cell => {
+				cell.style.outline = ""; // Remove o contorno
+				cell.style.outlineOffset = ""; // Remove o espaçamento do contorno
+			});
+		}
+	
+		// Adicionar evento de clique a cada célula
+		table.addEventListener("click", function (event) {
+			if (event.target.tagName === "TD") {
+				const clickedCell = event.target;
+				const clickedValue = clickedCell.firstChild.textContent.trim();
+	
+				// Criar uma classe única para este valor
+				const highlightClass = `highlight-${clickedValue.replace(/\s/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}`;
+	
+				// Se o elemento já estiver destacado, removê-lo
+				if (clickedCell.style.outline) {
+					// Remover destaque da célula
+					const allCells = table.getElementsByTagName("td");
+					for (let cell of allCells) {
+						const cellMainText = Array.from(cell.childNodes)
+							.filter(node => node.nodeType === Node.TEXT_NODE)
+							.map(node => node.textContent.trim())
+							.join("");
+						if (cellMainText === clickedValue) {
+							cell.style.outline = ""; // Remove o contorno
+							cell.style.outlineOffset = ""; // Remove o espaçamento do contorno
+						}
+					}
+				} else {
+					// Gerar uma cor para o valor se ainda não existir
+					if (!colorMap[clickedValue]) {
+						colorMap[clickedValue] = getRandomColor();
+					}
+	
+					// Adicionar destaque a todas as células com o mesmo valor
+					const allCells = table.getElementsByTagName("td");
+					for (let cell of allCells) {
+						const cellMainText = Array.from(cell.childNodes)
+							.filter(node => node.nodeType === Node.TEXT_NODE)
+							.map(node => node.textContent.trim())
+							.join("");
+						if (cellMainText === clickedValue) {
+							cell.style.outline = `2px solid ${colorMap[clickedValue]}`;
+							cell.style.outlineOffset = "2px";
+						}
+					}
+				}
+			}
+		});
+	
+		// Criar botão "Desmarcar Todos"
+		const button = document.getElementById("uncheck");
+		button.textContent = "Desmarcar Todos";
+		button.classList.add("mt-2");
+		button.addEventListener("click", removeAllHighlights);
+		document.body.insertBefore(button, table);
+	}
+	
 	function renderTable(games, mercado, periodo, isChecked) {
 		const gamesContainer = document.getElementById("gamesTableContainer");
 	
@@ -375,6 +465,7 @@
 	
 		const table = document.createElement("table");
 		table.classList.add("table", "table-bordered");
+		table.setAttribute("id", "score-table")
 	
 		// Cabeçalho
 		const thead = document.createElement("thead");
@@ -390,7 +481,6 @@
 	
 		gamesToShow.forEach((linha, index) => {
 			const row = document.createElement("tr");
-			console.log(linha.Colunas);
 			let linhaPorcentagem = 0; // Porcentagem de greens na linha atual
 			let totalGols = 0; // Contador de gols da linha atual
 			const cols = linha.Colunas.map((coluna) => {
@@ -406,7 +496,7 @@
 				totalGols += gols;
 	
 				return `
-					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center">
+					<td class="${isSuccess ? "bg-success" : "bg-danger"}" style="text-align: center; cursor: pointer">
 						${coluna.Resultado}
 						${coluna.odd ? `<br><span class="odds" style=${isChecked ? "'display: inline'" : "'display: none'"}>odd: ${coluna.odd}</span>` : ""}
 					</td>`;
@@ -442,9 +532,6 @@
 		table.appendChild(tbody);
 		gamesContainer.appendChild(table);
 	}
-	
-	
-	
 
 	// Função para verificar o resultado de acordo com o mercado selecionado
 	function verifyResult(coluna, mercado) {
